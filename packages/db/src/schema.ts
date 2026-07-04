@@ -31,6 +31,9 @@ export const loginTokens = pgTable(
     id: varchar("id", { length: 26 }).primaryKey(), // ulid
     email: text("email").notNull(),
     tokenHash: text("token_hash").notNull(),
+    // Relative path to return to after verify (e.g. back into an in-flight
+    // /authorize request); only ever set to a same-origin path we generated.
+    next: text("next"),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     usedAt: timestamp("used_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -147,9 +150,49 @@ export const oauthTokens = pgTable(
     refreshTokenHash: text("refresh_token_hash"),
     scope: text("scope"),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => ({
     accessTokenIdx: uniqueIndex("oauth_tokens_access_token_idx").on(table.accessTokenHash),
+    refreshTokenIdx: uniqueIndex("oauth_tokens_refresh_token_idx").on(table.refreshTokenHash),
+  }),
+);
+
+export const oauthAuthorizationCodes = pgTable(
+  "oauth_authorization_codes",
+  {
+    id: varchar("id", { length: 26 }).primaryKey(), // ulid
+    codeHash: text("code_hash").notNull(),
+    clientId: varchar("client_id", { length: 64 })
+      .notNull()
+      .references(() => oauthClients.clientId),
+    userId: varchar("user_id", { length: 26 })
+      .notNull()
+      .references(() => users.id),
+    redirectUri: text("redirect_uri").notNull(),
+    codeChallenge: text("code_challenge").notNull(),
+    codeChallengeMethod: varchar("code_challenge_method", { length: 10 }).notNull(),
+    scope: text("scope"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    codeHashIdx: uniqueIndex("oauth_authorization_codes_code_hash_idx").on(table.codeHash),
+  }),
+);
+
+export const accountRegisterAttempts = pgTable(
+  "account_register_attempts",
+  {
+    id: varchar("id", { length: 26 }).primaryKey(), // ulid
+    userId: varchar("user_id", { length: 26 })
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    userIdx: index("account_register_attempts_user_idx").on(table.userId, table.createdAt),
   }),
 );

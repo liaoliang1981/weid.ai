@@ -2,10 +2,12 @@ import { randomBytes, createHash } from "node:crypto";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { ulid } from "ulid";
 import { z } from "zod";
-import { accounts, agentCards, allocateNumber, loginTokens, users, type Db } from "@2088/db";
+import { accounts, loginTokens, users, type Db } from "@2088/db";
 import { eq, and, isNull, gt } from "drizzle-orm";
 import { sendMagicLink } from "../email.js";
 import { createSessionToken, verifySessionToken } from "../session.js";
+import { registerAccount, updateProfile, getAccountByUserId, whoami } from "../domain/account.js";
+import { DomainError } from "../domain/errors.js";
 
 const LOGIN_TOKEN_TTL_MS = 15 * 60 * 1000; // 15 minutes
 const SESSION_COOKIE = "session";
@@ -14,9 +16,10 @@ function hashToken(raw: string): string {
   return createHash("sha256").update(raw).digest("hex");
 }
 
-// 1-30 chars, any unicode incl. Chinese; strip control chars and surrounding whitespace.
-function sanitizeNickname(input: string): string {
-  return input.replace(/\p{Cc}/gu, "").trim();
+// Only ever set to paths we generated ourselves (see /authorize), so a plain
+// prefix check is enough to stop this from becoming an open redirect.
+function isSafeNext(next: unknown): next is string {
+  return typeof next === "string" && next.startsWith("/authorize?");
 }
 
 declare module "fastify" {
@@ -52,12 +55,13 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
   }
 
   app.post("/auth/request-link", async (req, reply) => {
-    const schema = z.object({ email: z.string().email() });
+    const schema = z.object({ email: z.string().email(), next: z.string().optional() });
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) {
       return reply.code(400).send({ error: "邮箱格式不对 / invalid email" });
     }
     const email = parsed.data.email.trim().toLowerCase();
+    const next = isSafeNext(parsed.data.next) ? parsed.data.next : null;
 
     const raw = randomBytes(32).toString("base64url");
     const tokenHash = hashToken(raw);
@@ -65,6 +69,7 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
       id: ulid(),
       email,
       tokenHash,
+      next,
       expiresAt: new Date(Date.now() + LOGIN_TOKEN_TTL_MS),
     });
 
@@ -116,7 +121,11 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
       maxAge: 30 * 24 * 60 * 60,
     });
 
-    const [account] = await db.select().from(accounts).where(eq(accounts.userId, user.id)).limit(1);
+    if (isSafeNext(row.next)) {
+      return reply.redirect(row.next);
+    }
+
+    const account = await getAccountByUserId(db, user.id);
     if (account) {
       return reply.redirect("/me");
     }
@@ -127,7 +136,7 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
     const userId = requireSession(req, reply);
     if (!userId) return;
 
-    const [account] = await db.select().from(accounts).where(eq(accounts.userId, userId)).limit(1);
+    const account = await getAccountByUserId(db, userId);
     if (account) return reply.redirect("/me");
 
     reply.type("text/html").send(`<!doctype html><html><head><meta charset="utf-8"><title>2088.ai — 领号</title></head>
@@ -144,24 +153,25 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
     const userId = requireSession(req, reply);
     if (!userId) return;
 
-    const [existing] = await db.select().from(accounts).where(eq(accounts.userId, userId)).limit(1);
-    if (existing) {
-      return reply.code(409).send({ error: "你已经有一个 2088 号了 / you already have a 2088 number" });
-    }
-
-    const schema = z.object({ nickname: z.string().min(1) });
+    const schema = z.object({ nickname: z.string().min(1), next: z.string().optional() });
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) {
       return reply.code(400).send({ error: "昵称不能为空 / nickname is required" });
     }
-    const nickname = sanitizeNickname(parsed.data.nickname).slice(0, 30);
-    if (!nickname) {
-      return reply.code(400).send({ error: "昵称不能为空 / nickname is required" });
+
+    let number: bigint;
+    try {
+      number = await registerAccount(db, userId, parsed.data.nickname);
+    } catch (err) {
+      if (err instanceof DomainError) {
+        return reply.code(400).send({ error: err.message });
+      }
+      throw err;
     }
 
-    const number = await allocateNumber(db);
-    await db.insert(accounts).values({ number, userId, nickname });
-    await db.insert(agentCards).values({ number });
+    if (isSafeNext(parsed.data.next)) {
+      return reply.redirect(parsed.data.next);
+    }
 
     return reply.send({
       ok: true,
@@ -174,23 +184,18 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
     const userId = requireSession(req, reply);
     if (!userId) return;
 
-    const [account] = await db.select().from(accounts).where(eq(accounts.userId, userId)).limit(1);
-    if (!account) {
+    const info = await whoami(db, userId);
+    if (!info) {
       return reply.code(404).send({ error: "你还没有 2088 号，请先用 /auth/register 注册 / no 2088 number yet" });
     }
-    return {
-      number: account.number.toString(),
-      nickname: account.nickname,
-      status: account.status,
-      tier: account.tier,
-    };
+    return info;
   });
 
   app.post("/auth/profile", async (req, reply) => {
     const userId = requireSession(req, reply);
     if (!userId) return;
 
-    const [account] = await db.select().from(accounts).where(eq(accounts.userId, userId)).limit(1);
+    const account = await getAccountByUserId(db, userId);
     if (!account) {
       return reply.code(404).send({ error: "你还没有 2088 号，请先注册 / no 2088 number yet" });
     }
@@ -208,27 +213,14 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
     if (!parsed.success) {
       return reply.code(400).send({ error: "参数不对 / invalid input", details: parsed.error.flatten() });
     }
-    const input = parsed.data;
 
-    if (input.nickname !== undefined) {
-      const nickname = sanitizeNickname(input.nickname).slice(0, 30);
-      if (!nickname) {
-        return reply.code(400).send({ error: "昵称不能为空 / nickname is required" });
+    try {
+      await updateProfile(db, account.number, parsed.data);
+    } catch (err) {
+      if (err instanceof DomainError) {
+        return reply.code(400).send({ error: err.message });
       }
-      await db.update(accounts).set({ nickname }).where(eq(accounts.number, account.number));
-    }
-
-    const cardUpdate: Record<string, unknown> = {};
-    if (input.description !== undefined) cardUpdate.description = input.description;
-    if (input.capabilities !== undefined) cardUpdate.capabilities = input.capabilities;
-    if (input.orgName !== undefined) cardUpdate.orgName = input.orgName;
-    if (input.orgUrl !== undefined) cardUpdate.orgUrl = input.orgUrl;
-    if (input.languages !== undefined) cardUpdate.languages = input.languages;
-    if (input.visibility !== undefined) cardUpdate.visibility = input.visibility;
-
-    if (Object.keys(cardUpdate).length > 0) {
-      cardUpdate.updatedAt = new Date();
-      await db.update(agentCards).set(cardUpdate).where(eq(agentCards.number, account.number));
+      throw err;
     }
 
     return { ok: true };
