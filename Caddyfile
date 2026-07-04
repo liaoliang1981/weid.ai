@@ -1,0 +1,11 @@
+2088.ai {
+	reverse_proxy web:3001
+}
+
+mcp.2088.ai {
+	reverse_proxy server:3000
+}
+
+auth.2088.ai {
+	reverse_proxy server:3000
+}

@@ -1,0 +1,25 @@
+{
+  "name": "2088-ai",
+  "private": true,
+  "version": "0.1.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@10.30.3",
+  "scripts": {
+    "dev:server": "pnpm --filter @2088/server dev",
+    "dev:web": "pnpm --filter @2088/web dev",
+    "build": "pnpm -r build",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "db:generate": "pnpm --filter @2088/db generate",
+    "db:migrate": "pnpm --filter @2088/db migrate"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "eslint": "^9.15.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.5"
+  }
+}
