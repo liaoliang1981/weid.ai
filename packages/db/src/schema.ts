@@ -21,9 +21,24 @@ export const users = pgTable("users", {
 });
 
 export const numberPool = pgTable("number_pool", {
-  id: varchar("id", { length: 8 }).primaryKey().default("singleton"),
-  nextNumber: bigint("next_number", { mode: "bigint" }).notNull().default(sql`10000`),
+  id: varchar("id", { length: 16 }).primaryKey().default("singleton"),
+  nextNumber: bigint("next_number", { mode: "bigint" }).notNull().default(sql`208801`),
 });
+
+export const loginTokens = pgTable(
+  "login_tokens",
+  {
+    id: varchar("id", { length: 26 }).primaryKey(), // ulid
+    email: text("email").notNull(),
+    tokenHash: text("token_hash").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    tokenHashIdx: uniqueIndex("login_tokens_token_hash_idx").on(table.tokenHash),
+  }),
+);
 
 export const accountStatusValues = ["active", "suspended"] as const;
 export const accountTierValues = ["free", "verified_person", "verified_business"] as const;

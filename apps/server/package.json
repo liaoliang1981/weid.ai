@@ -10,7 +10,12 @@
   },
   "dependencies": {
     "@2088/db": "workspace:*",
-    "fastify": "^5.1.0"
+    "@fastify/cookie": "^11.0.1",
+    "drizzle-orm": "^0.36.4",
+    "fastify": "^5.1.0",
+    "resend": "^4.0.1",
+    "ulid": "^2.3.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "tsx": "^4.19.2",

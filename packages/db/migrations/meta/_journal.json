@@ -8,6 +8,27 @@
       "when": 1783135213055,
       "tag": "0000_zippy_smiling_tiger",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1783136608065,
+      "tag": "0001_ambitious_micromacro",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783147575656,
+      "tag": "0002_white_hellion",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1783148076822,
+      "tag": "0003_mushy_captain_flint",
+      "breakpoints": true
     }
   ]
 }

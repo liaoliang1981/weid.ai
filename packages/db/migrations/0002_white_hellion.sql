@@ -1,0 +1,1 @@
+ALTER TABLE "number_pool" ALTER COLUMN "id" SET DATA TYPE varchar(16);
