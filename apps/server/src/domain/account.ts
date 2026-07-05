@@ -80,11 +80,16 @@ export async function getAccountByUserId(db: Db, userId: string) {
   return account ?? null;
 }
 
-export async function requireAccountNumber(db: Db, userId: string): Promise<bigint> {
+export async function requireAccount(db: Db, userId: string) {
   const account = await getAccountByUserId(db, userId);
   if (!account) {
     throw new DomainError("你还没有 2088 号，请先用 register_account 注册 / you don't have a 2088 number yet — register first with register_account");
   }
+  return account;
+}
+
+export async function requireAccountNumber(db: Db, userId: string): Promise<bigint> {
+  const account = await requireAccount(db, userId);
   return account.number;
 }
 

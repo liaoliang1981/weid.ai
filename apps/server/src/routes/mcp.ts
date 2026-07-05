@@ -18,17 +18,19 @@ const METHOD_NOT_ALLOWED = {
 
 export interface McpRouteOptions {
   db: Db;
+  mcpUrl: string;
 }
 
 export async function mcpRoutes(app: FastifyInstance, opts: McpRouteOptions) {
-  const { db } = opts;
+  const { db, mcpUrl } = opts;
+  const wwwAuthenticate = `Bearer realm="2088.ai", resource_metadata="${mcpUrl}/.well-known/oauth-protected-resource"`;
 
   app.post("/mcp", async (req, reply) => {
     const authHeader = req.headers.authorization;
     const token = authHeader?.startsWith("Bearer ") ? authHeader.slice("Bearer ".length) : null;
     const verified = token ? await verifyAccessToken(db, token) : null;
     if (!verified) {
-      reply.code(401).header("WWW-Authenticate", 'Bearer realm="2088.ai"').send(JSON_RPC_UNAUTHORIZED);
+      reply.code(401).header("WWW-Authenticate", wwwAuthenticate).send(JSON_RPC_UNAUTHORIZED);
       return;
     }
 

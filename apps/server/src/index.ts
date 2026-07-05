@@ -14,6 +14,7 @@ if (!sessionSecret) {
   throw new Error("SESSION_SECRET must be set");
 }
 const authBaseUrl = process.env.AUTH_URL ?? "http://localhost:3000";
+const mcpUrl = process.env.MCP_URL ?? authBaseUrl;
 const devMode = !process.env.RESEND_API_KEY;
 
 const db = createDb(databaseUrl);
@@ -26,8 +27,8 @@ app.get("/healthz", async () => {
 });
 
 await app.register(authRoutes, { db, sessionSecret, authBaseUrl, devMode });
-await app.register(oauthRoutes, { db, sessionSecret, issuer: authBaseUrl });
-await app.register(mcpRoutes, { db });
+await app.register(oauthRoutes, { db, sessionSecret, issuer: authBaseUrl, mcpUrl });
+await app.register(mcpRoutes, { db, mcpUrl });
 
 const port = Number(process.env.PORT ?? 3000);
 const host = process.env.HOST ?? "0.0.0.0";

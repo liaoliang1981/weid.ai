@@ -108,10 +108,11 @@ export interface OAuthRouteOptions {
   db: Db;
   sessionSecret: string;
   issuer: string;
+  mcpUrl: string;
 }
 
 export async function oauthRoutes(app: FastifyInstance, opts: OAuthRouteOptions) {
-  const { db, sessionSecret, issuer } = opts;
+  const { db, sessionSecret, issuer, mcpUrl } = opts;
 
   app.get("/.well-known/oauth-authorization-server", async () => ({
     issuer,
@@ -123,6 +124,14 @@ export async function oauthRoutes(app: FastifyInstance, opts: OAuthRouteOptions)
     code_challenge_methods_supported: ["S256"],
     token_endpoint_auth_methods_supported: ["none"],
     scopes_supported: ["2088"],
+  }));
+
+  // RFC 9728 — some MCP clients (e.g. ChatGPT's connector implementation)
+  // discover the authorization server via the resource server's metadata
+  // document rather than assuming it lives at the MCP server's own origin.
+  app.get("/.well-known/oauth-protected-resource", async () => ({
+    resource: mcpUrl,
+    authorization_servers: [issuer],
   }));
 
   app.post("/register", async (req, reply) => {
