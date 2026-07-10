@@ -11,21 +11,15 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
-export const users = pgTable(
-  "users",
-  {
-    id: varchar("id", { length: 26 }).primaryKey(), // ulid
-    // Hash of the user's recovery code — the only credential in this system.
-    // The number is public (meant to be shared); this is the private secret
-    // that proves account ownership across devices/re-authorizations.
-    recoveryCodeHash: text("recovery_code_hash").notNull(),
-    locale: varchar("locale", { length: 5 }).notNull().default("zh"),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  },
-  (table) => ({
-    recoveryCodeHashIdx: uniqueIndex("users_recovery_code_hash_idx").on(table.recoveryCodeHash),
-  }),
-);
+export const users = pgTable("users", {
+  id: varchar("id", { length: 26 }).primaryKey(), // ulid
+  // scrypt hash (salt + derived key) of the user's own chosen password. The
+  // number is public (meant to be shared), so it can't double as a login
+  // secret; login is number + password, looked up by number, not by this hash.
+  passwordHash: text("password_hash").notNull(),
+  locale: varchar("locale", { length: 5 }).notNull().default("zh"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
 
 export const numberPool = pgTable("number_pool", {
   id: varchar("id", { length: 16 }).primaryKey().default("singleton"),

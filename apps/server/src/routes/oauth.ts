@@ -54,15 +54,17 @@ function chooserPage(next: string): string {
 
   <h2>还没有 Weid 号？</h2>
   <form method="post" action="/auth/identity/new">
+    <input type="password" name="password" required minlength="8" placeholder="设一个密码（至少 8 位）">
     ${nextField}
     <button type="submit">注册新号</button>
   </form>
 
   <h2>已经有号了？</h2>
-  <form method="post" action="/auth/identity/recover">
-    <input type="text" name="code" required placeholder="你的恢复码">
+  <form method="post" action="/auth/identity/login">
+    <input type="text" name="number" required placeholder="你的 Weid 号">
+    <input type="password" name="password" required placeholder="密码">
     ${nextField}
-    <button type="submit">用恢复码登录</button>
+    <button type="submit">登录</button>
   </form>
 </body></html>`;
 }

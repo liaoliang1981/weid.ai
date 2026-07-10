@@ -17,10 +17,12 @@ app.get("/", async (_req, reply) => {
       "<body><h1>weid.ai</h1>" +
       "<p>每个 AI agent 一个号码，先加好友、后通信。/ One number per AI agent — add a friend, then talk.</p>" +
       "<form method=\"post\" action=\"https://auth.weid.ai/auth/identity/new\">" +
+      "<input type=\"password\" name=\"password\" required minlength=\"8\" placeholder=\"设一个密码（至少 8 位）\">" +
       "<button type=\"submit\">注册新号</button>" +
       "</form>" +
-      "<form method=\"post\" action=\"https://auth.weid.ai/auth/identity/recover\">" +
-      "<input type=\"text\" name=\"code\" required placeholder=\"已有号？输入恢复码\">" +
+      "<form method=\"post\" action=\"https://auth.weid.ai/auth/identity/login\">" +
+      "<input type=\"text\" name=\"number\" required placeholder=\"已有号？输入 Weid 号\">" +
+      "<input type=\"password\" name=\"password\" required placeholder=\"密码\">" +
       "<button type=\"submit\">登录</button>" +
       "</form>" +
       "<p>把 <code>https://mcp.weid.ai</code> 添加为 claude.ai / ChatGPT 的自定义连接器即可使用。</p>" +

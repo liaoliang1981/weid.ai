@@ -3,7 +3,7 @@ import { z } from "zod";
 import { type Db } from "@weid/db";
 import { createSessionToken, verifySessionToken } from "../session.js";
 import { registerAccount, updateProfile, getAccountByUserId, whoami } from "../domain/account.js";
-import { createIdentity, recoverIdentity } from "../domain/identity.js";
+import { createIdentity, loginWithPassword } from "../domain/identity.js";
 import { DomainError } from "../domain/errors.js";
 
 const SESSION_COOKIE = "session";
@@ -12,10 +12,6 @@ const SESSION_COOKIE = "session";
 // prefix check is enough to stop this from becoming an open redirect.
 function isSafeNext(next: unknown): next is string {
   return typeof next === "string" && next.startsWith("/authorize?");
-}
-
-function escapeHtml(input: string): string {
-  return input.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
 declare module "fastify" {
@@ -41,7 +37,7 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
   function requireSession(req: FastifyRequest, reply: FastifyReply): string | null {
     if (!req.userId) {
       reply.code(401).send({
-        error: "还没登录，请先用 POST /auth/identity/new 注册或 POST /auth/identity/recover 用恢复码登录 / Not logged in — register via POST /auth/identity/new or log in with a recovery code via POST /auth/identity/recover",
+        error: "还没登录，请先用 POST /auth/identity/new 注册或 POST /auth/identity/login 用号码+密码登录 / Not logged in — register via POST /auth/identity/new or log in via POST /auth/identity/login",
       });
       return null;
     }
@@ -74,49 +70,55 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
 
   <h2>还没有 Weid 号？</h2>
   <form method="post" action="/auth/identity/new">
+    <input type="password" name="password" required minlength="8" placeholder="设一个密码（至少 8 位）">
     <button type="submit">注册新号</button>
   </form>
 
   <h2>已经有号了？</h2>
-  <form method="post" action="/auth/identity/recover">
-    <input type="text" name="code" required placeholder="你的恢复码">
-    <button type="submit">用恢复码登录</button>
+  <form method="post" action="/auth/identity/login">
+    <input type="text" name="number" required placeholder="你的 Weid 号">
+    <input type="password" name="password" required placeholder="密码">
+    <button type="submit">登录</button>
   </form>
 </body></html>`);
   });
 
-  // Creates a brand new identity (no number yet) and shows the recovery code
-  // exactly once — this is the only moment it's ever visible in plaintext.
+  // Creates a brand new identity with a user-chosen password (no number yet).
   app.post("/auth/identity/new", async (req, reply) => {
-    const schema = z.object({ next: z.string().optional() });
-    const parsed = schema.safeParse(req.body);
-    const next = parsed.success && isSafeNext(parsed.data.next) ? parsed.data.next : null;
-
-    const { userId, recoveryCode } = await createIdentity(db);
-    setSessionCookie(reply, userId);
-
-    const continueHref = next ?? "/auth/register";
-    reply.type("text/html").send(`<!doctype html><html><head><meta charset="utf-8"><title>weid.ai — 保存恢复码</title></head>
-<body>
-  <h1>保存好你的恢复码</h1>
-  <p>这串码是你找回账号的唯一方式，只会显示这一次，请立刻保存：</p>
-  <pre style="font-size:18px;padding:12px;border:1px solid #ccc;">${escapeHtml(recoveryCode)}</pre>
-  <p>号码本身可以随便告诉别人，但这串恢复码不行——谁拿到它谁就能登录你的账号。</p>
-  <p><a href="${escapeHtml(continueHref)}">我已保存，继续</a></p>
-</body></html>`);
-  });
-
-  // Logs back in with a previously issued recovery code.
-  app.post("/auth/identity/recover", async (req, reply) => {
-    const schema = z.object({ code: z.string().min(1), next: z.string().optional() });
+    const schema = z.object({ password: z.string().min(1), next: z.string().optional() });
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) {
-      return reply.code(400).send({ error: "恢复码不能为空 / recovery code is required" });
+      return reply.code(400).send({ error: "密码不能为空 / password is required" });
     }
 
     let userId: string;
     try {
-      userId = await recoverIdentity(db, parsed.data.code);
+      userId = await createIdentity(db, parsed.data.password);
+    } catch (err) {
+      if (err instanceof DomainError) {
+        return reply.code(400).send({ error: err.message });
+      }
+      throw err;
+    }
+    setSessionCookie(reply, userId);
+
+    if (isSafeNext(parsed.data.next)) {
+      return reply.redirect(parsed.data.next);
+    }
+    return reply.redirect("/auth/register");
+  });
+
+  // Logs back in with the Weid number + the password chosen at registration.
+  app.post("/auth/identity/login", async (req, reply) => {
+    const schema = z.object({ number: z.string().min(1), password: z.string().min(1), next: z.string().optional() });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) {
+      return reply.code(400).send({ error: "号码和密码不能为空 / number and password are required" });
+    }
+
+    let userId: string;
+    try {
+      userId = await loginWithPassword(db, parsed.data.number, parsed.data.password);
     } catch (err) {
       if (err instanceof DomainError) {
         return reply.code(400).send({ error: err.message });
