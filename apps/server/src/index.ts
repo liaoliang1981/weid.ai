@@ -27,7 +27,7 @@ app.get("/healthz", async () => {
 
 await app.register(authRoutes, { db, sessionSecret });
 await app.register(oauthRoutes, { db, sessionSecret, issuer: authBaseUrl, mcpUrl });
-await app.register(mcpRoutes, { db, mcpUrl });
+await app.register(mcpRoutes, { db, mcpUrl, authBaseUrl });
 
 const port = Number(process.env.PORT ?? 3000);
 const host = process.env.HOST ?? "0.0.0.0";

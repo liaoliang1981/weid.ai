@@ -1,4 +1,4 @@
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import type { Db } from "@weid/db";
 import { verifyAccessToken } from "./oauth.js";
@@ -19,13 +19,26 @@ const METHOD_NOT_ALLOWED = {
 export interface McpRouteOptions {
   db: Db;
   mcpUrl: string;
+  authBaseUrl: string;
 }
 
 export async function mcpRoutes(app: FastifyInstance, opts: McpRouteOptions) {
-  const { db, mcpUrl } = opts;
+  const { db, mcpUrl, authBaseUrl } = opts;
   const wwwAuthenticate = `Bearer realm="weid.ai", resource_metadata="${mcpUrl}/.well-known/oauth-protected-resource"`;
+  // MCP clients (e.g. claude.ai) treat the connector URL itself as the full
+  // endpoint and POST straight to it with no path — so the JSON-RPC handler
+  // must also live at "/" on the mcp.* host, not just at "/mcp". Constrained
+  // to that host so auth.weid.ai's "/" (the register/login chooser) is
+  // unaffected; "/mcp" stays registered too for local testing/back-compat.
+  //
+  // Locally MCP_URL and AUTH_URL both collapse to the same localhost:PORT,
+  // so the constraint would shadow the auth chooser at "/" — only register
+  // the constrained duplicate when the two are genuinely different hosts.
+  const mcpHost = new URL(mcpUrl).host;
+  const authHost = new URL(authBaseUrl).host;
+  const hasDistinctMcpHost = mcpHost !== authHost;
 
-  app.post("/mcp", async (req, reply) => {
+  async function handlePost(req: FastifyRequest, reply: FastifyReply) {
     const authHeader = req.headers.authorization;
     const token = authHeader?.startsWith("Bearer ") ? authHeader.slice("Bearer ".length) : null;
     const verified = token ? await verifyAccessToken(db, token) : null;
@@ -61,13 +74,19 @@ export async function mcpRoutes(app: FastifyInstance, opts: McpRouteOptions) {
         );
       }
     }
-  });
+  }
 
-  app.get("/mcp", async (_req, reply) => {
+  async function methodNotAllowed(_req: FastifyRequest, reply: FastifyReply) {
     reply.code(405).send(METHOD_NOT_ALLOWED);
-  });
+  }
 
-  app.delete("/mcp", async (_req, reply) => {
-    reply.code(405).send(METHOD_NOT_ALLOWED);
-  });
+  app.post("/mcp", handlePost);
+  app.get("/mcp", methodNotAllowed);
+  app.delete("/mcp", methodNotAllowed);
+
+  if (hasDistinctMcpHost) {
+    app.post("/", { constraints: { host: mcpHost } }, handlePost);
+    app.get("/", { constraints: { host: mcpHost } }, methodNotAllowed);
+    app.delete("/", { constraints: { host: mcpHost } }, methodNotAllowed);
+  }
 }
