@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import type { Db } from "@2088/db";
+import type { Db } from "@weid/db";
 import { DomainError } from "./domain/errors.js";
 import { registerAccount, updateProfile, whoami, requireAccount, requireAccountNumber } from "./domain/account.js";
 import {
@@ -39,19 +39,19 @@ export interface McpToolContext {
 
 export function buildMcpServer(ctx: McpToolContext): McpServer {
   const { db, userId } = ctx;
-  const server = new McpServer({ name: "2088-network", version: "0.1.0" });
+  const server = new McpServer({ name: "weid-network", version: "0.1.0" });
 
   server.registerTool(
     "whoami",
     {
       description:
-        "返回当前登录用户的 2088 号码、昵称、未读消息数、待处理好友申请数。在会话开始或用户问“我的 2088”时调用。",
+        "返回当前登录用户的 Weid 号码、昵称、未读消息数、待处理好友申请数。在会话开始或用户问“我的 Weid”时调用。",
       inputSchema: {},
     },
     async () => {
       const info = await whoami(db, userId);
       if (!info) {
-        return ok("你还没有 2088 号，请先用 register_account 注册 / you don't have a 2088 number yet — register first with register_account");
+        return ok("你还没有 Weid 号，请先用 register_account 注册 / you don't have a Weid number yet — register first with register_account");
       }
       return ok(JSON.stringify(info, null, 2));
     },
@@ -61,7 +61,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     "register_account",
     {
       description:
-        "为当前用户分配一个 2088 号码（系统顺序取号，不可自选）并设置昵称。每用户限 1 个免费号码。",
+        "为当前用户分配一个 Weid 号码（系统顺序取号，不可自选）并设置昵称。每用户限 1 个免费号码。",
       inputSchema: {
         nickname: z.string().min(1).max(30).describe("想给自己起的昵称，任意语言，1-30 字符"),
       },
@@ -70,7 +70,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
       guarded(
         () => registerAccount(db, userId, nickname),
         (number) =>
-          `你的 2088 号是 @${number}，越早注册号越靠前，此号终身归你。/ Your 2088 number is @${number} — permanently yours.`,
+          `你的 Weid 号是 @${number}，越早注册号越靠前，此号终身归你。/ Your Weid number is @${number} — permanently yours.`,
       ),
   );
 
@@ -111,7 +111,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     {
       description: "按号码查公开名片（昵称、描述、能力、认证等级、是否已是好友）。",
       inputSchema: {
-        number: z.string().describe("2088 号码，接受 @208824、208824、208824@2088.ai 三种写法"),
+        number: z.string().describe("Weid 号码，接受 @10024、10024、10024@weid.ai 三种写法"),
       },
     },
     async ({ number }) =>
@@ -128,9 +128,9 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     "send_friend_request",
     {
       description:
-        "向某个 2088 号码发好友申请，必须附验证语说明来意（≤100 字）。对方接受后才能互相发消息。",
+        "向某个 Weid 号码发好友申请，必须附验证语说明来意（≤100 字）。对方接受后才能互相发消息。",
       inputSchema: {
-        to_number: z.string().describe("对方 2088 号码，接受 @208824、208824、208824@2088.ai 三种写法"),
+        to_number: z.string().describe("对方 Weid 号码，接受 @10024、10024、10024@weid.ai 三种写法"),
         intro: z.string().min(1).max(100).describe("验证语，说明来意，≤100 字"),
       },
     },
@@ -252,7 +252,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
       description:
         "发送消息，一步发出。发送前对方必须已经是好友，否则会被拒绝并提示先用 send_friend_request。",
       inputSchema: {
-        to_number: z.string().describe("对方 2088 号码，接受 @208824、208824、208824@2088.ai 三种写法"),
+        to_number: z.string().describe("对方 Weid 号码，接受 @10024、10024、10024@weid.ai 三种写法"),
         subject: z.string().max(200).optional(),
         body_text: z.string().min(1).describe("消息正文，自然语言，必须自足"),
         structured: z

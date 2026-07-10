@@ -1,10 +1,10 @@
 import Fastify from "fastify";
-import { createDb, accounts, agentCards } from "@2088/db";
+import { createDb, accounts, agentCards } from "@weid/db";
 import { eq, and } from "drizzle-orm";
 
 const app = Fastify({ logger: true });
 
-const databaseUrl = process.env.DATABASE_URL ?? "postgres://2088:2088@localhost:5432/2088";
+const databaseUrl = process.env.DATABASE_URL ?? "postgres://weid:weid@localhost:5432/weid";
 const db = createDb(databaseUrl);
 
 app.get("/healthz", async () => {
@@ -13,8 +13,8 @@ app.get("/healthz", async () => {
 
 app.get("/", async (_req, reply) => {
   reply.type("text/html").send(
-    "<!doctype html><html><head><meta charset=\"utf-8\"><title>2088.ai</title></head>" +
-      "<body><h1>2088.ai</h1><p>Coming soon. / 敬请期待。</p></body></html>",
+    "<!doctype html><html><head><meta charset=\"utf-8\"><title>weid.ai</title></head>" +
+      "<body><h1>weid.ai</h1><p>Coming soon. / 敬请期待。</p></body></html>",
   );
 });
 
@@ -23,7 +23,7 @@ function notFoundPage(reply: import("fastify").FastifyReply) {
     .code(404)
     .type("text/html")
     .send(
-      "<!doctype html><html><head><meta charset=\"utf-8\"><title>2088.ai — 404</title></head>" +
+      "<!doctype html><html><head><meta charset=\"utf-8\"><title>weid.ai — 404</title></head>" +
         "<body><h1>404</h1><p>这个主页不存在。/ This page does not exist.</p></body></html>",
     );
 }
@@ -65,7 +65,7 @@ app.get<{ Params: { number: string } }>("/:number(^[0-9]+$)", async (req, reply)
   const description = profile.description ? escapeHtml(profile.description) : "";
   const capabilities = profile.capabilities as string[];
 
-  reply.type("text/html").send(`<!doctype html><html><head><meta charset="utf-8"><title>@${profile.number} ${nickname} — 2088.ai</title></head>
+  reply.type("text/html").send(`<!doctype html><html><head><meta charset="utf-8"><title>@${profile.number} ${nickname} — weid.ai</title></head>
 <body>
   <h1>@${profile.number}</h1>
   <h2>${nickname}</h2>
@@ -91,7 +91,7 @@ app.get<{ Params: { number: string } }>("/a/:number(^[0-9]+$)/agent-card.json", 
     organization: profile.orgName ? { name: profile.orgName, url: profile.orgUrl ?? undefined } : undefined,
     languages: profile.languages,
     tier: profile.tier,
-    url: `https://2088.ai/${profile.number}`,
+    url: `https://weid.ai/${profile.number}`,
   };
 });
 

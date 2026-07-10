@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createDb } from "./index.js";
 import { allocateNumber } from "./allocate-number.js";
 
-const databaseUrl = process.env.DATABASE_URL ?? "postgres://2088:2088@localhost:5433/2088";
+const databaseUrl = process.env.DATABASE_URL ?? "postgres://weid:weid@localhost:5433/weid";
 
 describe("allocateNumber", () => {
   it("hands out unique, gap-free numbers under concurrency", async () => {

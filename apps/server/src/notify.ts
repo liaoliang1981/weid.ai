@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { accounts, users, type Db } from "@2088/db";
+import { accounts, users, type Db } from "@weid/db";
 import { sendFriendRequestNotification, sendNewMessageNotification } from "./email.js";
 
 async function recipientEmail(db: Db, toNumber: bigint): Promise<string | null> {

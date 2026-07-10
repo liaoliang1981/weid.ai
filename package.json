@@ -1,5 +1,5 @@
 {
-  "name": "2088-ai",
+  "name": "weid-ai",
   "private": true,
   "version": "0.1.0",
   "engines": {
@@ -7,13 +7,13 @@
   },
   "packageManager": "pnpm@10.30.3",
   "scripts": {
-    "dev:server": "pnpm --filter @2088/server dev",
-    "dev:web": "pnpm --filter @2088/web dev",
+    "dev:server": "pnpm --filter @weid/server dev",
+    "dev:web": "pnpm --filter @weid/web dev",
     "build": "pnpm -r build",
     "lint": "eslint .",
     "test": "vitest run",
-    "db:generate": "pnpm --filter @2088/db generate",
-    "db:migrate": "pnpm --filter @2088/db migrate"
+    "db:generate": "pnpm --filter @weid/db generate",
+    "db:migrate": "pnpm --filter @weid/db migrate"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

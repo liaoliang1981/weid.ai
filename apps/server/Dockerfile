@@ -12,4 +12,4 @@ COPY . .
 
 WORKDIR /repo/apps/server
 EXPOSE 3000
-CMD ["sh", "-c", "pnpm --filter @2088/db migrate && pnpm exec tsx src/index.ts"]
+CMD ["sh", "-c", "pnpm --filter @weid/db migrate && pnpm exec tsx src/index.ts"]

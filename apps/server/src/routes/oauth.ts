@@ -3,7 +3,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { ulid } from "ulid";
 import { eq, and, isNull, gt } from "drizzle-orm";
-import { oauthClients, oauthAuthorizationCodes, oauthTokens, type Db } from "@2088/db";
+import { oauthClients, oauthAuthorizationCodes, oauthTokens, type Db } from "@weid/db";
 import { getAccountByUserId } from "../domain/account.js";
 import { verifySessionToken } from "../session.js";
 
@@ -47,9 +47,9 @@ function hiddenFields(query: Record<string, string | undefined>): string {
 }
 
 function loginPage(next: string): string {
-  return `<!doctype html><html><head><meta charset="utf-8"><title>2088.ai — 登录</title></head>
+  return `<!doctype html><html><head><meta charset="utf-8"><title>weid.ai — 登录</title></head>
 <body>
-  <h1>登录 2088.ai 以授权</h1>
+  <h1>登录 weid.ai 以授权</h1>
   <form id="f">
     <input type="email" id="email" required placeholder="你的邮箱">
     <button type="submit">发送登录链接</button>
@@ -76,13 +76,13 @@ function loginPage(next: string): string {
 }
 
 function registerPage(next: string): string {
-  return `<!doctype html><html><head><meta charset="utf-8"><title>2088.ai — 领号</title></head>
+  return `<!doctype html><html><head><meta charset="utf-8"><title>weid.ai — 领号</title></head>
 <body>
   <h1>给自己起个昵称</h1>
   <form method="post" action="/auth/register">
     <input type="text" name="nickname" maxlength="30" required placeholder="任意语言，1-30 字符">
     <input type="hidden" name="next" value="${escapeHtml(next)}">
-    <button type="submit">领取我的 2088 号</button>
+    <button type="submit">领取我的 Weid 号</button>
   </form>
 </body></html>`;
 }
@@ -92,10 +92,10 @@ function consentPage(
   account: { number: bigint; nickname: string },
   query: z.infer<typeof AuthorizeQuery>,
 ): string {
-  return `<!doctype html><html><head><meta charset="utf-8"><title>2088.ai — 授权</title></head>
+  return `<!doctype html><html><head><meta charset="utf-8"><title>weid.ai — 授权</title></head>
 <body>
   <h1>授权请求</h1>
-  <p><strong>${escapeHtml(clientName)}</strong> 想要访问你的 2088 信箱（@${account.number} ${escapeHtml(account.nickname)}）。</p>
+  <p><strong>${escapeHtml(clientName)}</strong> 想要访问你的 Weid 信箱（@${account.number} ${escapeHtml(account.nickname)}）。</p>
   <form method="post" action="/authorize/approve">
     ${hiddenFields(query)}
     <button type="submit" name="action" value="approve">同意 / Approve</button>
@@ -123,7 +123,7 @@ export async function oauthRoutes(app: FastifyInstance, opts: OAuthRouteOptions)
     grant_types_supported: ["authorization_code", "refresh_token"],
     code_challenge_methods_supported: ["S256"],
     token_endpoint_auth_methods_supported: ["none"],
-    scopes_supported: ["2088"],
+    scopes_supported: ["weid"],
   }));
 
   // RFC 9728 — some MCP clients (e.g. ChatGPT's connector implementation)
@@ -212,7 +212,7 @@ export async function oauthRoutes(app: FastifyInstance, opts: OAuthRouteOptions)
     }
     const account = await getAccountByUserId(db, session.userId);
     if (!account) {
-      return reply.code(400).send({ error: "no_2088_account" });
+      return reply.code(400).send({ error: "no_weid_account" });
     }
 
     const url = new URL(redirect_uri);

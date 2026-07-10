@@ -26,9 +26,6 @@ importers:
 
   apps/server:
     dependencies:
-      '@2088/db':
-        specifier: workspace:*
-        version: link:../../packages/db
       '@fastify/cookie':
         specifier: ^11.0.1
         version: 11.0.2
@@ -38,6 +35,9 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: ^1.29.0
         version: 1.29.0(zod@3.25.76)
+      '@weid/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       drizzle-orm:
         specifier: ^0.36.4
         version: 0.36.4(postgres@3.4.9)(react@19.2.7)
@@ -63,7 +63,7 @@ importers:
 
   apps/web:
     dependencies:
-      '@2088/db':
+      '@weid/db':
         specifier: workspace:*
         version: link:../../packages/db
       drizzle-orm:

@@ -1,11 +1,11 @@
-2088.ai {
+weid.ai {
 	reverse_proxy web:3001
 }
 
-mcp.2088.ai {
+mcp.weid.ai {
 	reverse_proxy server:3000
 }
 
-auth.2088.ai {
+auth.weid.ai {
 	reverse_proxy server:3000
 }

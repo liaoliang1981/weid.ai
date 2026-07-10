@@ -1,5 +1,5 @@
 import { and, eq, or, gt, desc, sql, inArray } from "drizzle-orm";
-import { accounts, contacts, friendRequests, type Db } from "@2088/db";
+import { accounts, contacts, friendRequests, type Db } from "@weid/db";
 import { ulid } from "ulid";
 import { DomainError } from "./errors.js";
 import { normalizeNumber } from "./numbers.js";
@@ -41,7 +41,7 @@ export async function sendFriendRequest(
 
   const [dest] = await db.select().from(accounts).where(eq(accounts.number, toNumber)).limit(1);
   if (!dest || dest.status !== "active") {
-    throw new DomainError(`找不到这个 2088 号或已停用: ${toNumber} / number not found or suspended`);
+    throw new DomainError(`找不到这个 Weid 号或已停用: ${toNumber} / number not found or suspended`);
   }
 
   if (await areFriends(db, fromNumber, toNumber)) {

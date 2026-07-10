@@ -5,6 +5,6 @@ export default defineConfig({
   out: "./migrations",
   dialect: "postgresql",
   dbCredentials: {
-    url: process.env.DATABASE_URL ?? "postgres://2088:2088@localhost:5432/2088",
+    url: process.env.DATABASE_URL ?? "postgres://weid:weid@localhost:5432/weid",
   },
 });

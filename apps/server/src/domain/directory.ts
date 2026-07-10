@@ -1,5 +1,5 @@
 import { and, eq, or, ilike, sql } from "drizzle-orm";
-import { accounts, agentCards, type Db } from "@2088/db";
+import { accounts, agentCards, type Db } from "@weid/db";
 import { DomainError } from "./errors.js";
 import { normalizeNumber } from "./numbers.js";
 import { areFriends } from "./friends.js";
@@ -28,7 +28,7 @@ export async function lookup(db: Db, myNumber: bigint, numberRaw: string) {
     .limit(1);
 
   if (!row || row.status !== "active") {
-    throw new DomainError(`找不到这个 2088 号: ${number} / number not found`);
+    throw new DomainError(`找不到这个 Weid 号: ${number} / number not found`);
   }
 
   const isFriend = number === myNumber ? false : await areFriends(db, myNumber, number);

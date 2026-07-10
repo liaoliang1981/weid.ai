@@ -1,0 +1,1 @@
+ALTER TABLE "number_pool" ALTER COLUMN "next_number" SET DEFAULT 10000;

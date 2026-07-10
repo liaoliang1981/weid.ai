@@ -1,5 +1,5 @@
 import { eq, and, gt, sql } from "drizzle-orm";
-import { accounts, agentCards, allocateNumber, accountRegisterAttempts, friendRequests, messages, type Db } from "@2088/db";
+import { accounts, agentCards, allocateNumber, accountRegisterAttempts, friendRequests, messages, type Db } from "@weid/db";
 import { ulid } from "ulid";
 import { DomainError } from "./errors.js";
 
@@ -14,7 +14,7 @@ export function sanitizeNickname(input: string): string {
 export async function registerAccount(db: Db, userId: string, rawNickname: string): Promise<bigint> {
   const [existing] = await db.select().from(accounts).where(eq(accounts.userId, userId)).limit(1);
   if (existing) {
-    throw new DomainError("你已经有一个 2088 号了 / you already have a 2088 number");
+    throw new DomainError("你已经有一个 Weid 号了 / you already have a Weid number");
   }
 
   const [{ count }] = await db
@@ -83,7 +83,7 @@ export async function getAccountByUserId(db: Db, userId: string) {
 export async function requireAccount(db: Db, userId: string) {
   const account = await getAccountByUserId(db, userId);
   if (!account) {
-    throw new DomainError("你还没有 2088 号，请先用 register_account 注册 / you don't have a 2088 number yet — register first with register_account");
+    throw new DomainError("你还没有 Weid 号，请先用 register_account 注册 / you don't have a Weid number yet — register first with register_account");
   }
   return account;
 }

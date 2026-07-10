@@ -22,7 +22,7 @@ export const users = pgTable("users", {
 
 export const numberPool = pgTable("number_pool", {
   id: varchar("id", { length: 16 }).primaryKey().default("singleton"),
-  nextNumber: bigint("next_number", { mode: "bigint" }).notNull().default(sql`208801`),
+  nextNumber: bigint("next_number", { mode: "bigint" }).notNull().default(sql`10000`),
 });
 
 export const loginTokens = pgTable(
@@ -117,7 +117,7 @@ export const messages = pgTable(
     toNumber: bigint("to_number", { mode: "bigint" }).notNull(),
     threadId: varchar("thread_id", { length: 26 }).notNull(),
     subject: text("subject"),
-    body: jsonb("body").notNull(), // see CLAUDE.md §5 for the 2088.msg.v1 shape
+    body: jsonb("body").notNull(), // see CLAUDE.md §5 for the weid.msg.v1 shape
     status: varchar("status", { length: 10 }).notNull().default("unread"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },

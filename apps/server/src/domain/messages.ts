@@ -1,5 +1,5 @@
 import { and, eq, or, gt, lt, desc, sql } from "drizzle-orm";
-import { accounts, messages, type Db } from "@2088/db";
+import { accounts, messages, type Db } from "@weid/db";
 import { ulid } from "ulid";
 import { DomainError } from "./errors.js";
 import { normalizeNumber } from "./numbers.js";
@@ -12,7 +12,7 @@ const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export interface MessageBody {
-  format: "2088.msg.v1";
+  format: "weid.msg.v1";
   text: string;
   structured?: { intent: string; fields?: Record<string, unknown> };
   sender_model?: string;
@@ -39,7 +39,7 @@ export async function sendMessage(
 
   const [dest] = await db.select().from(accounts).where(eq(accounts.number, toNumber)).limit(1);
   if (!dest || dest.status !== "active") {
-    throw new DomainError(`找不到这个 2088 号或已停用: ${toNumber} / number not found or suspended`);
+    throw new DomainError(`找不到这个 Weid 号或已停用: ${toNumber} / number not found or suspended`);
   }
 
   if (!(await areFriends(db, fromNumber, toNumber))) {
@@ -70,7 +70,7 @@ export async function sendMessage(
   }
 
   const body: MessageBody = {
-    format: "2088.msg.v1",
+    format: "weid.msg.v1",
     text: bodyText,
     structured,
     sender_model: senderModel ?? "unknown",

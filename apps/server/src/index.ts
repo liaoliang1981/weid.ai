@@ -1,14 +1,14 @@
 import Fastify from "fastify";
 import cookie from "@fastify/cookie";
 import formbody from "@fastify/formbody";
-import { createDb } from "@2088/db";
+import { createDb } from "@weid/db";
 import { authRoutes } from "./routes/auth.js";
 import { oauthRoutes } from "./routes/oauth.js";
 import { mcpRoutes } from "./routes/mcp.js";
 
 const app = Fastify({ logger: true });
 
-const databaseUrl = process.env.DATABASE_URL ?? "postgres://2088:2088@localhost:5432/2088";
+const databaseUrl = process.env.DATABASE_URL ?? "postgres://weid:weid@localhost:5432/weid";
 const sessionSecret = process.env.SESSION_SECRET;
 if (!sessionSecret) {
   throw new Error("SESSION_SECRET must be set");

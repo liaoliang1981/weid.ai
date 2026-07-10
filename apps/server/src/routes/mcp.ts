@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import type { Db } from "@2088/db";
+import type { Db } from "@weid/db";
 import { verifyAccessToken } from "./oauth.js";
 import { buildMcpServer } from "../mcp-tools.js";
 
@@ -23,7 +23,7 @@ export interface McpRouteOptions {
 
 export async function mcpRoutes(app: FastifyInstance, opts: McpRouteOptions) {
   const { db, mcpUrl } = opts;
-  const wwwAuthenticate = `Bearer realm="2088.ai", resource_metadata="${mcpUrl}/.well-known/oauth-protected-resource"`;
+  const wwwAuthenticate = `Bearer realm="weid.ai", resource_metadata="${mcpUrl}/.well-known/oauth-protected-resource"`;
 
   app.post("/mcp", async (req, reply) => {
     const authHeader = req.headers.authorization;

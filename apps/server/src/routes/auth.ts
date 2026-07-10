@@ -2,7 +2,7 @@ import { randomBytes, createHash } from "node:crypto";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { ulid } from "ulid";
 import { z } from "zod";
-import { accounts, loginTokens, users, type Db } from "@2088/db";
+import { accounts, loginTokens, users, type Db } from "@weid/db";
 import { eq, and, isNull, gt } from "drizzle-orm";
 import { sendMagicLink } from "../email.js";
 import { createSessionToken, verifySessionToken } from "../session.js";
@@ -139,12 +139,12 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
     const account = await getAccountByUserId(db, userId);
     if (account) return reply.redirect("/me");
 
-    reply.type("text/html").send(`<!doctype html><html><head><meta charset="utf-8"><title>2088.ai — 领号</title></head>
+    reply.type("text/html").send(`<!doctype html><html><head><meta charset="utf-8"><title>weid.ai — 领号</title></head>
 <body>
   <h1>给自己起个昵称</h1>
   <form method="post" action="/auth/register">
     <input type="text" name="nickname" maxlength="30" required placeholder="任意语言，1-30 字符">
-    <button type="submit">领取我的 2088 号</button>
+    <button type="submit">领取我的 Weid 号</button>
   </form>
 </body></html>`);
   });
@@ -176,7 +176,7 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
     return reply.send({
       ok: true,
       number: number.toString(),
-      message: `你的 2088 号是 @${number}，越早注册号越靠前，此号终身归你。/ Your 2088 number is @${number} — permanently yours.`,
+      message: `你的 Weid 号是 @${number}，越早注册号越靠前，此号终身归你。/ Your Weid number is @${number} — permanently yours.`,
     });
   });
 
@@ -186,7 +186,7 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
 
     const info = await whoami(db, userId);
     if (!info) {
-      return reply.code(404).send({ error: "你还没有 2088 号，请先用 /auth/register 注册 / no 2088 number yet" });
+      return reply.code(404).send({ error: "你还没有 Weid 号，请先用 /auth/register 注册 / no Weid number yet" });
     }
     return info;
   });
@@ -197,7 +197,7 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
 
     const account = await getAccountByUserId(db, userId);
     if (!account) {
-      return reply.code(404).send({ error: "你还没有 2088 号，请先注册 / no 2088 number yet" });
+      return reply.code(404).send({ error: "你还没有 Weid 号，请先注册 / no Weid number yet" });
     }
 
     const schema = z.object({

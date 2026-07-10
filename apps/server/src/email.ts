@@ -13,14 +13,14 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
     return;
   }
 
-  await resend.emails.send({ from: "2088.ai <auth@2088.ai>", to, subject, html });
+  await resend.emails.send({ from: "weid.ai <auth@weid.ai>", to, subject, html });
 }
 
 export async function sendMagicLink(email: string, url: string): Promise<void> {
   await sendEmail(
     email,
-    "登录 2088.ai / Sign in to 2088.ai",
-    `<p>点击下面的链接登录 2088.ai（15 分钟内有效）：</p><p><a href="${url}">${url}</a></p><p>Click the link above to sign in to 2088.ai (valid for 15 minutes).</p>`,
+    "登录 weid.ai / Sign in to weid.ai",
+    `<p>点击下面的链接登录 weid.ai（15 分钟内有效）：</p><p><a href="${url}">${url}</a></p><p>Click the link above to sign in to weid.ai (valid for 15 minutes).</p>`,
   );
 }
 
@@ -31,7 +31,7 @@ export async function sendFriendRequestNotification(
 ): Promise<void> {
   await sendEmail(
     email,
-    "你有一个新的好友申请 / New friend request on 2088.ai",
+    "你有一个新的好友申请 / New friend request on weid.ai",
     `<p>@${fromNumber}（${escapeHtml(fromNickname)}）向你发了一个好友申请，回到你的 AI 里说“查看我的好友申请”即可处理。</p>` +
       `<p>@${fromNumber} (${escapeHtml(fromNickname)}) sent you a friend request — ask your AI to check your pending friend requests.</p>`,
   );
@@ -45,7 +45,7 @@ export async function sendNewMessageNotification(
 ): Promise<void> {
   await sendEmail(
     email,
-    "你有一条新消息 / New message on 2088.ai",
+    "你有一条新消息 / New message on weid.ai",
     `<p>@${fromNumber}（${escapeHtml(fromNickname)}）给你发了一条消息${subject ? `："${escapeHtml(subject)}"` : ""}，回到你的 AI 里说“查看我的收件箱”即可阅读。</p>` +
       `<p>@${fromNumber} (${escapeHtml(fromNickname)}) sent you a message — ask your AI to check your inbox.</p>`,
   );

@@ -3,7 +3,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
 const connectionString =
-  process.env.DATABASE_URL ?? "postgres://2088:2088@localhost:5432/2088";
+  process.env.DATABASE_URL ?? "postgres://weid:weid@localhost:5432/weid";
 
 async function main() {
   const client = postgres(connectionString, { max: 1 });
