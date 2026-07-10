@@ -11,9 +11,7 @@ import {
 } from "./domain/friends.js";
 import { sendMessage, checkInbox, readMessage } from "./domain/messages.js";
 import { lookup, searchDirectory } from "./domain/directory.js";
-import { normalizeNumber } from "./domain/numbers.js";
 import { wrapUntrusted } from "./domain/security.js";
-import { notifyNewFriendRequest, notifyNewMessage } from "./notify.js";
 
 function ok(text: string) {
   return { content: [{ type: "text" as const, text }] };
@@ -138,12 +136,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
       guarded(
         async () => {
           const me = await requireAccount(db, userId);
-          const id = await sendFriendRequest(db, me.number, to_number, intro);
-          const toNumber = normalizeNumber(to_number);
-          if (toNumber !== null) {
-            void notifyNewFriendRequest(db, toNumber, me.number, me.nickname);
-          }
-          return id;
+          return sendFriendRequest(db, me.number, to_number, intro);
         },
         (id) => `好友申请已发送，等待对方同意（申请 id: ${id}）。/ Friend request sent (id: ${id}), waiting for approval.`,
       ),
@@ -269,12 +262,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
       guarded(
         async () => {
           const me = await requireAccount(db, userId);
-          const result = await sendMessage(db, me.number, to_number, subject, body_text, structured, sender_model, reply_to);
-          const toNumber = normalizeNumber(to_number);
-          if (toNumber !== null) {
-            void notifyNewMessage(db, toNumber, me.number, me.nickname, subject);
-          }
-          return result;
+          return sendMessage(db, me.number, to_number, subject, body_text, structured, sender_model, reply_to);
         },
         (result) => `消息已发送（message id: ${result.id}, thread: ${result.threadId}）。/ Message sent.`,
       ),

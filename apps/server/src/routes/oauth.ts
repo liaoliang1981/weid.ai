@@ -46,32 +46,24 @@ function hiddenFields(query: Record<string, string | undefined>): string {
     .join("\n    ");
 }
 
-function loginPage(next: string): string {
+function chooserPage(next: string): string {
+  const nextField = `<input type="hidden" name="next" value="${escapeHtml(next)}">`;
   return `<!doctype html><html><head><meta charset="utf-8"><title>weid.ai — 登录</title></head>
 <body>
   <h1>登录 weid.ai 以授权</h1>
-  <form id="f">
-    <input type="email" id="email" required placeholder="你的邮箱">
-    <button type="submit">发送登录链接</button>
+
+  <h2>还没有 Weid 号？</h2>
+  <form method="post" action="/auth/identity/new">
+    ${nextField}
+    <button type="submit">注册新号</button>
   </form>
-  <p id="msg"></p>
-  <script>
-    document.getElementById('f').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('email').value;
-      const resp = await fetch('/auth/request-link', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, next: ${JSON.stringify(next)} }),
-      });
-      const data = await resp.json();
-      if (data.devLoginUrl) {
-        window.location.href = data.devLoginUrl;
-      } else {
-        document.getElementById('msg').textContent = '登录链接已发到你的邮箱，请查收。/ Check your email for the login link.';
-      }
-    });
-  </script>
+
+  <h2>已经有号了？</h2>
+  <form method="post" action="/auth/identity/recover">
+    <input type="text" name="code" required placeholder="你的恢复码">
+    ${nextField}
+    <button type="submit">用恢复码登录</button>
+  </form>
 </body></html>`;
 }
 
@@ -182,7 +174,7 @@ export async function oauthRoutes(app: FastifyInstance, opts: OAuthRouteOptions)
     const next = `/authorize?${queryString}`;
 
     if (!session) {
-      return reply.type("text/html").send(loginPage(next));
+      return reply.type("text/html").send(chooserPage(next));
     }
 
     const account = await getAccountByUserId(db, session.userId);
