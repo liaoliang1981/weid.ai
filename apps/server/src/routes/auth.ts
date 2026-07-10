@@ -58,6 +58,33 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
     });
   }
 
+  // Standalone entry point — lets someone register or log back in directly
+  // on auth.weid.ai, independent of any OAuth connector flow. Establishes a
+  // session so that connecting a connector afterward skips straight to
+  // consent (same as visiting github.com to sign in before authorizing an app).
+  app.get("/", async (req, reply) => {
+    if (req.userId) {
+      const account = await getAccountByUserId(db, req.userId);
+      return reply.redirect(account ? "/me" : "/auth/register");
+    }
+
+    reply.type("text/html").send(`<!doctype html><html><head><meta charset="utf-8"><title>weid.ai — 登录</title></head>
+<body>
+  <h1>weid.ai</h1>
+
+  <h2>还没有 Weid 号？</h2>
+  <form method="post" action="/auth/identity/new">
+    <button type="submit">注册新号</button>
+  </form>
+
+  <h2>已经有号了？</h2>
+  <form method="post" action="/auth/identity/recover">
+    <input type="text" name="code" required placeholder="你的恢复码">
+    <button type="submit">用恢复码登录</button>
+  </form>
+</body></html>`);
+  });
+
   // Creates a brand new identity (no number yet) and shows the recovery code
   // exactly once — this is the only moment it's ever visible in plaintext.
   app.post("/auth/identity/new", async (req, reply) => {
