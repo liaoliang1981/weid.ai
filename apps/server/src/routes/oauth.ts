@@ -89,7 +89,7 @@ function consentPage(
   return `<!doctype html><html><head><meta charset="utf-8"><title>weid.ai — 授权</title></head>
 <body>
   <h1>授权请求</h1>
-  <p><strong>${escapeHtml(clientName)}</strong> 想要访问你的 Weid 信箱（@${account.number} ${escapeHtml(account.nickname)}）。</p>
+  <p><strong>${escapeHtml(clientName)}</strong> 想要访问你的 Weid 账号（@${account.number} ${escapeHtml(account.nickname)}）。</p>
   <form method="post" action="/authorize/approve">
     ${hiddenFields(query)}
     <button type="submit" name="action" value="approve">同意 / Approve</button>
