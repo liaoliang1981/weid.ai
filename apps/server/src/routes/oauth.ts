@@ -69,27 +69,18 @@ function chooserPage(next: string): string {
 </body></html>`;
 }
 
-function registerPage(next: string): string {
-  return `<!doctype html><html><head><meta charset="utf-8"><title>weid.ai — 领号</title></head>
-<body>
-  <h1>给自己起个昵称</h1>
-  <form method="post" action="/auth/register">
-    <input type="text" name="nickname" maxlength="30" required placeholder="任意语言，1-30 字符">
-    <input type="hidden" name="next" value="${escapeHtml(next)}">
-    <button type="submit">领取我的 Weid 号</button>
-  </form>
-</body></html>`;
-}
-
 function consentPage(
   clientName: string,
-  account: { number: bigint; nickname: string },
+  account: { number: bigint; nickname: string } | null,
   query: z.infer<typeof AuthorizeQuery>,
 ): string {
+  const identityLine = account
+    ? `<strong>${escapeHtml(clientName)}</strong> 想要访问你的 Weid 账号（@${account.number} ${escapeHtml(account.nickname)}）。`
+    : `<strong>${escapeHtml(clientName)}</strong> 想要连接你的 Weid 账号。你还没有号码——同意后可以直接让 AI 调用 register_account 注册。`;
   return `<!doctype html><html><head><meta charset="utf-8"><title>weid.ai — 授权</title></head>
 <body>
   <h1>授权请求</h1>
-  <p><strong>${escapeHtml(clientName)}</strong> 想要访问你的 Weid 账号（@${account.number} ${escapeHtml(account.nickname)}）。</p>
+  <p>${identityLine}</p>
   <form method="post" action="/authorize/approve">
     ${hiddenFields(query)}
     <button type="submit" name="action" value="approve">同意 / Approve</button>
@@ -180,10 +171,6 @@ export async function oauthRoutes(app: FastifyInstance, opts: OAuthRouteOptions)
     }
 
     const account = await getAccountByUserId(db, session.userId);
-    if (!account) {
-      return reply.type("text/html").send(registerPage(next));
-    }
-
     return reply.type("text/html").send(consentPage(client.clientName, account, parsed.data));
   });
 
@@ -203,10 +190,6 @@ export async function oauthRoutes(app: FastifyInstance, opts: OAuthRouteOptions)
     const session = verifySessionToken(sessionSecret, req.cookies?.session);
     if (!session) {
       return reply.code(401).send({ error: "login_required" });
-    }
-    const account = await getAccountByUserId(db, session.userId);
-    if (!account) {
-      return reply.code(400).send({ error: "no_weid_account" });
     }
 
     const url = new URL(redirect_uri);

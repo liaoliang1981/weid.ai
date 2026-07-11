@@ -161,7 +161,7 @@ oauth_clients / oauth_tokens:  按 OAuth 2.1 + RFC 7591 标准表结构
 
 1. 实现标准端点：`/.well-known/oauth-authorization-server`、`/authorize`、`/token`、`/register`（动态客户端注册）。
 2. 授权页（`auth.weid.ai`）：无会话时先给一个选择——"注册新号"（设一个密码即分配号码）或"已有号，登录"（输入 Weid 号 + 密码）；登录后显示"授权 Claude/ChatGPT 访问你的 Weid 账号"确认页。
-3. 首次授权且无号码的用户，授权成功页直接引导领号（也可稍后在对话里用工具注册）。
+3. 授权不强制要求已有号码——登录（设密码）后即可同意授权拿到 token，没有号码的用户由 AI 在对话里调用 `register_account` 自行注册，不需要先在网页上填昵称表单。
 4. 手工验收路径：claude.ai → Settings → Connectors → Add custom connector → 填 `https://mcp.weid.ai`；ChatGPT 侧走其自定义连接器/Apps 入口。两端都必须真机跑通，这是硬验收项。
 
 ---
