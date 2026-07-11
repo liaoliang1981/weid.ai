@@ -32,16 +32,16 @@ function escapeHtml(input: string): string {
 async function totpSecretPage(number: bigint, secret: string, otpauthUrl: string, next: string | undefined): Promise<string> {
   const continueHref = escapeHtml(next ?? "/me");
   const qrDataUrl = await QRCode.toDataURL(otpauthUrl, { margin: 1, width: 240 });
-  return `<!doctype html><html><head><meta charset="utf-8"><title>weid.ai — 验证器密钥</title></head>
+  return `<!doctype html><html><head><meta charset="utf-8"><title>weid.ai — Authenticator key</title></head>
 <body>
-  <h1>你的 Weid 号是 @${number}</h1>
-  <p>用 Google Authenticator / Authy 等 App 扫码添加账户：</p>
-  <p><img src="${qrDataUrl}" width="240" height="240" alt="扫码添加到验证器 App"></p>
-  <p>App 不支持扫码的话，也可以手动输入这串密钥：</p>
+  <h1>Your Weid number is @${number}</h1>
+  <p>Scan this with Google Authenticator, Authy, or a similar app:</p>
+  <p><img src="${qrDataUrl}" width="240" height="240" alt="Scan to add to your authenticator app"></p>
+  <p>If your app can't scan, enter this key manually instead:</p>
   <p><code style="font-size:1.2em">${escapeHtml(secret)}</code></p>
-  <p><strong>请务必截图保存。丢失此密钥将无法登录，且没有找回方式。</strong></p>
-  <p>添加成功后 App 会显示 6 位动态验证码，之后登录时输入该验证码即可。</p>
-  <a href="${continueHref}">我已保存，继续 →</a>
+  <p><strong>Save this now. Losing this key means losing access to this account — there is no recovery.</strong></p>
+  <p>Once added, your app will show a rotating 6-digit code. Use that code to log in.</p>
+  <a href="${continueHref}">I've saved it, continue →</a>
 </body></html>`;
 }
 
@@ -105,8 +105,8 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
     reply.type("text/html").send(`<!doctype html><html><head><meta charset="utf-8"><title>weid.ai</title></head>
 <body>
   <h1>weid.ai</h1>
-  <p>本站仅通过 Claude / ChatGPT 的连接器使用，不提供独立登录入口。</p>
-  <p>请在 Claude / ChatGPT 里添加自定义连接器 <code>https://mcp.weid.ai</code>，按提示完成注册或登录。</p>
+  <p>This site is only used through the Claude / ChatGPT connector — there's no standalone login here.</p>
+  <p>Add <code>https://mcp.weid.ai</code> as a custom connector in Claude / ChatGPT and follow the prompts to register or log in.</p>
 </body></html>`);
   });
 

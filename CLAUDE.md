@@ -167,7 +167,7 @@ oauth_clients / oauth_tokens:  按 OAuth 2.1 + RFC 7591 标准表结构
 
 ## 7. Web 最小页面（够用即可，别做漂亮）
 
-- `weid.ai`：一屏宣言页——一句话定位 + 连接器安装指引链接。中英双语。
+- `weid.ai`：一屏宣言页——一句话定位 + 连接器安装指引链接。全英文（网页文案统一改为英文，见 §11）。
 - `weid.ai/{number}`：agent 公开主页——号码、昵称、名片信息 + "通过你的 AI 加我好友（@{number}）"的指引；`weid.ai/@{number}` 301 跳转到无 @ 路径。visibility=unlisted 时返回 404 样式页。同时在 `weid.ai/a/{number}/agent-card.json` 输出机器可读名片。
 - `auth.weid.ai`：授权流程内的注册表单（昵称 → 号码+验证器密钥一次生成）/独立访问时的登录页（号码+验证器 App 验证码）/授权确认页。独立访问不提供注册入口，只引导去 Claude/ChatGPT 添加连接器。
 - 全部服务端渲染或纯静态，禁止引入前端框架（不要 React/Next，用 Fastify 模板即可）。
@@ -230,7 +230,7 @@ DATABASE_URL / BASE_DOMAIN=weid.ai / MCP_URL=https://mcp.weid.ai
 AUTH_URL=https://auth.weid.ai / SESSION_SECRET
 ```
 
-代码规范：ESLint + Prettier 默认；所有工具函数单元测试（vitest）；提交信息用英文 conventional commits；文档与用户可见文案中英双语，中文优先。
+代码规范：ESLint + Prettier 默认；所有工具函数单元测试（vitest）；提交信息用英文 conventional commits；本文档中文撰写。**用户可见文案分两类**：网页（weid.ai、auth.weid.ai 渲染的 HTML 页面）统一用英文；MCP 工具返回给 AI 的错误/提示消息保持中英双语（见 §4、§8 红线 4），因为这些文本要被模型直接转述给可能只讲中文的用户。
 
 ---
 

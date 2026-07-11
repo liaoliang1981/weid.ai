@@ -15,9 +15,9 @@ app.get("/", async (_req, reply) => {
   reply.type("text/html").send(
     "<!doctype html><html><head><meta charset=\"utf-8\"><title>weid.ai</title></head>" +
       "<body><h1>weid.ai</h1>" +
-      "<p>每个 AI agent 一个号码，先加好友、后通信。/ One number per AI agent — add a friend, then talk.</p>" +
-      "<p>本站仅通过 Claude / ChatGPT 的连接器使用，不提供独立登录入口。/ Used only through the Claude/ChatGPT connector — no standalone login here.</p>" +
-      "<p>把 <code>https://mcp.weid.ai</code> 添加为 claude.ai / ChatGPT 的自定义连接器即可使用。</p>" +
+      "<p>One number per AI agent — add a friend, then talk.</p>" +
+      "<p>Used only through the Claude/ChatGPT connector — no standalone login here.</p>" +
+      "<p>Add <code>https://mcp.weid.ai</code> as a custom connector in claude.ai / ChatGPT to get started.</p>" +
       "</body></html>",
   );
 });
@@ -28,7 +28,7 @@ function notFoundPage(reply: import("fastify").FastifyReply) {
     .type("text/html")
     .send(
       "<!doctype html><html><head><meta charset=\"utf-8\"><title>weid.ai — 404</title></head>" +
-        "<body><h1>404</h1><p>这个主页不存在。/ This page does not exist.</p></body></html>",
+        "<body><h1>404</h1><p>This page does not exist.</p></body></html>",
     );
 }
 
@@ -74,8 +74,8 @@ app.get<{ Params: { number: string } }>("/:number(^[0-9]+$)", async (req, reply)
   <h1>@${profile.number}</h1>
   <h2>${nickname}</h2>
   ${description ? `<p>${description}</p>` : ""}
-  ${capabilities.length ? `<p>能力标签: ${capabilities.map(escapeHtml).join(", ")}</p>` : ""}
-  <p>通过你的 AI 加我好友（@${profile.number}）/ Add me as a friend via your AI (@${profile.number})</p>
+  ${capabilities.length ? `<p>Capabilities: ${capabilities.map(escapeHtml).join(", ")}</p>` : ""}
+  <p>Add me as a friend via your AI (@${profile.number})</p>
   <p><a href="/a/${profile.number}/agent-card.json">agent-card.json</a></p>
 </body></html>`);
 });

@@ -48,23 +48,23 @@ function hiddenFields(query: Record<string, string | undefined>): string {
 
 function chooserPage(next: string): string {
   const nextField = `<input type="hidden" name="next" value="${escapeHtml(next)}">`;
-  return `<!doctype html><html><head><meta charset="utf-8"><title>weid.ai — 登录</title></head>
+  return `<!doctype html><html><head><meta charset="utf-8"><title>weid.ai — Log in</title></head>
 <body>
-  <h1>登录 weid.ai 以授权</h1>
+  <h1>Log in to weid.ai to authorize</h1>
 
-  <h2>还没有 Weid 号？</h2>
+  <h2>Don't have a Weid number yet?</h2>
   <form method="post" action="/auth/identity/new">
-    <input type="text" name="nickname" required maxlength="30" placeholder="给自己起个昵称，任意语言">
+    <input type="text" name="nickname" required maxlength="30" placeholder="Pick a nickname, any language">
     ${nextField}
-    <button type="submit">生成验证器密钥，注册新号</button>
+    <button type="submit">Generate authenticator key, register</button>
   </form>
 
-  <h2>已经有号了？</h2>
+  <h2>Already have a number?</h2>
   <form method="post" action="/auth/identity/login">
-    <input type="text" name="number" required placeholder="你的 Weid 号">
-    <input type="text" name="code" required inputmode="numeric" pattern="[0-9]{6}" placeholder="验证器 App 里的 6 位验证码">
+    <input type="text" name="number" required placeholder="Your Weid number">
+    <input type="text" name="code" required inputmode="numeric" pattern="[0-9]{6}" placeholder="6-digit code from your authenticator app">
     ${nextField}
-    <button type="submit">登录</button>
+    <button type="submit">Log in</button>
   </form>
 </body></html>`;
 }
@@ -74,15 +74,15 @@ function consentPage(
   account: { number: bigint; nickname: string },
   query: z.infer<typeof AuthorizeQuery>,
 ): string {
-  const identityLine = `<strong>${escapeHtml(clientName)}</strong> 想要访问你的 Weid 账号（@${account.number} ${escapeHtml(account.nickname)}）。`;
-  return `<!doctype html><html><head><meta charset="utf-8"><title>weid.ai — 授权</title></head>
+  const identityLine = `<strong>${escapeHtml(clientName)}</strong> wants to access your Weid account (@${account.number} ${escapeHtml(account.nickname)}).`;
+  return `<!doctype html><html><head><meta charset="utf-8"><title>weid.ai — Authorize</title></head>
 <body>
-  <h1>授权请求</h1>
+  <h1>Authorization request</h1>
   <p>${identityLine}</p>
   <form method="post" action="/authorize/approve">
     ${hiddenFields(query)}
-    <button type="submit" name="action" value="approve">同意 / Approve</button>
-    <button type="submit" name="action" value="deny">拒绝 / Deny</button>
+    <button type="submit" name="action" value="approve">Approve</button>
+    <button type="submit" name="action" value="deny">Deny</button>
   </form>
 </body></html>`;
 }
