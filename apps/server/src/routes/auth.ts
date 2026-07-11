@@ -1,9 +1,10 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
+import QRCode from "qrcode";
 import { type Db } from "@weid/db";
 import { createSessionToken, verifySessionToken } from "../session.js";
-import { registerAccount, updateProfile, getAccountByUserId, whoami } from "../domain/account.js";
-import { createIdentity, loginWithPassword } from "../domain/identity.js";
+import { updateProfile, getAccountByUserId, whoami } from "../domain/account.js";
+import { createIdentity, loginWithTotp } from "../domain/identity.js";
 import { DomainError } from "../domain/errors.js";
 
 const SESSION_COOKIE = "session";
@@ -12,6 +13,36 @@ const SESSION_COOKIE = "session";
 // prefix check is enough to stop this from becoming an open redirect.
 function isSafeNext(next: unknown): next is string {
   return typeof next === "string" && next.startsWith("/authorize?");
+}
+
+function escapeHtml(input: string): string {
+  return input
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// Shown exactly once, right after the secret is generated — there is no
+// "forgot my code" recovery, same redline as the password design it
+// replaces, so the user must save this before continuing. Nickname, number,
+// and secret are all minted together (see domain/identity.ts), so the QR
+// already carries the real number — one scan is enough.
+async function totpSecretPage(number: bigint, secret: string, otpauthUrl: string, next: string | undefined): Promise<string> {
+  const continueHref = escapeHtml(next ?? "/me");
+  const qrDataUrl = await QRCode.toDataURL(otpauthUrl, { margin: 1, width: 240 });
+  return `<!doctype html><html><head><meta charset="utf-8"><title>weid.ai — 验证器密钥</title></head>
+<body>
+  <h1>你的 Weid 号是 @${number}</h1>
+  <p>用 Google Authenticator / Authy 等 App 扫码添加账户：</p>
+  <p><img src="${qrDataUrl}" width="240" height="240" alt="扫码添加到验证器 App"></p>
+  <p>App 不支持扫码的话，也可以手动输入这串密钥：</p>
+  <p><code style="font-size:1.2em">${escapeHtml(secret)}</code></p>
+  <p><strong>请务必截图保存。丢失此密钥将无法登录，且没有找回方式。</strong></p>
+  <p>添加成功后 App 会显示 6 位动态验证码，之后登录时输入该验证码即可。</p>
+  <a href="${continueHref}">我已保存，继续 →</a>
+</body></html>`;
 }
 
 declare module "fastify" {
@@ -37,7 +68,7 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
   function requireSession(req: FastifyRequest, reply: FastifyReply): string | null {
     if (!req.userId) {
       reply.code(401).send({
-        error: "还没登录，请先用 POST /auth/identity/new 注册或 POST /auth/identity/login 用号码+密码登录 / Not logged in — register via POST /auth/identity/new or log in via POST /auth/identity/login",
+        error: "还没登录，请先用号码+验证码登录，或在 Claude/ChatGPT 里添加 https://mcp.weid.ai 连接器完成注册 / Not logged in — log in with your number + code, or add https://mcp.weid.ai as a connector in Claude/ChatGPT to register",
       });
       return null;
     }
@@ -54,118 +85,68 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
     });
   }
 
-  // Standalone entry point — lets someone register or log back in directly
-  // on auth.weid.ai, independent of any OAuth connector flow. Establishes a
-  // session so that connecting a connector afterward skips straight to
-  // consent (same as visiting github.com to sign in before authorizing an app).
+  app.get("/auth/logout", async (_req, reply) => {
+    reply.clearCookie(SESSION_COOKIE, { path: "/" });
+    return reply.redirect("/");
+  });
+
+  // Standalone entry point on auth.weid.ai — no functional form here at
+  // all, by design. Both registration AND login only happen as part of the
+  // OAuth connector flow (see routes/oauth.ts chooserPage): the connector
+  // redirects the browser to /authorize, which is where the real chooser
+  // (with the nickname/number/login fields) lives. This page is just a
+  // pointer to that flow, so there's no way to use the site standalone.
   app.get("/", async (req, reply) => {
     if (req.userId) {
       const account = await getAccountByUserId(db, req.userId);
-      return reply.redirect(account ? "/me" : "/auth/register");
+      if (account) return reply.redirect("/me");
     }
 
-    reply.type("text/html").send(`<!doctype html><html><head><meta charset="utf-8"><title>weid.ai — 登录</title></head>
+    reply.type("text/html").send(`<!doctype html><html><head><meta charset="utf-8"><title>weid.ai</title></head>
 <body>
   <h1>weid.ai</h1>
-
-  <h2>还没有 Weid 号？</h2>
-  <form method="post" action="/auth/identity/new">
-    <input type="password" name="password" required minlength="8" placeholder="设一个密码（至少 8 位）">
-    <button type="submit">注册新号</button>
-  </form>
-
-  <h2>已经有号了？</h2>
-  <form method="post" action="/auth/identity/login">
-    <input type="text" name="number" required placeholder="你的 Weid 号">
-    <input type="password" name="password" required placeholder="密码">
-    <button type="submit">登录</button>
-  </form>
+  <p>本站仅通过 Claude / ChatGPT 的连接器使用，不提供独立登录入口。</p>
+  <p>请在 Claude / ChatGPT 里添加自定义连接器 <code>https://mcp.weid.ai</code>，按提示完成注册或登录。</p>
 </body></html>`);
   });
 
-  // Creates a brand new identity with a user-chosen password (no number yet).
+  // Creates a brand new identity, claims a Weid number, and generates a TOTP
+  // secret, all in one step — only reachable through the OAuth connector
+  // flow's chooser form (see routes/oauth.ts), which is where the nickname
+  // field lives.
   app.post("/auth/identity/new", async (req, reply) => {
-    const schema = z.object({ password: z.string().min(1), next: z.string().optional() });
-    const parsed = schema.safeParse(req.body);
-    if (!parsed.success) {
-      return reply.code(400).send({ error: "密码不能为空 / password is required" });
-    }
-
-    let userId: string;
-    try {
-      userId = await createIdentity(db, parsed.data.password);
-    } catch (err) {
-      if (err instanceof DomainError) {
-        return reply.code(400).send({ error: err.message });
-      }
-      throw err;
-    }
-    setSessionCookie(reply, userId);
-
-    if (isSafeNext(parsed.data.next)) {
-      return reply.redirect(parsed.data.next);
-    }
-    return reply.redirect("/auth/register");
-  });
-
-  // Logs back in with the Weid number + the password chosen at registration.
-  app.post("/auth/identity/login", async (req, reply) => {
-    const schema = z.object({ number: z.string().min(1), password: z.string().min(1), next: z.string().optional() });
-    const parsed = schema.safeParse(req.body);
-    if (!parsed.success) {
-      return reply.code(400).send({ error: "号码和密码不能为空 / number and password are required" });
-    }
-
-    let userId: string;
-    try {
-      userId = await loginWithPassword(db, parsed.data.number, parsed.data.password);
-    } catch (err) {
-      if (err instanceof DomainError) {
-        return reply.code(400).send({ error: err.message });
-      }
-      throw err;
-    }
-
-    setSessionCookie(reply, userId);
-
-    if (isSafeNext(parsed.data.next)) {
-      return reply.redirect(parsed.data.next);
-    }
-
-    const account = await getAccountByUserId(db, userId);
-    return reply.redirect(account ? "/me" : "/auth/register");
-  });
-
-  app.get("/auth/register", async (req, reply) => {
-    const userId = requireSession(req, reply);
-    if (!userId) return;
-
-    const account = await getAccountByUserId(db, userId);
-    if (account) return reply.redirect("/me");
-
-    reply.type("text/html").send(`<!doctype html><html><head><meta charset="utf-8"><title>weid.ai — 领号</title></head>
-<body>
-  <h1>给自己起个昵称</h1>
-  <form method="post" action="/auth/register">
-    <input type="text" name="nickname" maxlength="30" required placeholder="任意语言，1-30 字符">
-    <button type="submit">领取我的 Weid 号</button>
-  </form>
-</body></html>`);
-  });
-
-  app.post("/auth/register", async (req, reply) => {
-    const userId = requireSession(req, reply);
-    if (!userId) return;
-
-    const schema = z.object({ nickname: z.string().min(1), next: z.string().optional() });
+    const schema = z.object({ nickname: z.string().min(1).max(30), next: z.string().optional() });
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) {
       return reply.code(400).send({ error: "昵称不能为空 / nickname is required" });
     }
 
-    let number: bigint;
+    let identity: Awaited<ReturnType<typeof createIdentity>>;
     try {
-      number = await registerAccount(db, userId, parsed.data.nickname);
+      identity = await createIdentity(db, sessionSecret, parsed.data.nickname);
+    } catch (err) {
+      if (err instanceof DomainError) {
+        return reply.code(400).send({ error: err.message });
+      }
+      throw err;
+    }
+    setSessionCookie(reply, identity.userId);
+
+    const next = isSafeNext(parsed.data.next) ? parsed.data.next : undefined;
+    return reply.type("text/html").send(await totpSecretPage(identity.number, identity.secret, identity.otpauthUrl, next));
+  });
+
+  // Logs back in with the Weid number + the current authenticator-app code.
+  app.post("/auth/identity/login", async (req, reply) => {
+    const schema = z.object({ number: z.string().min(1), code: z.string().min(1), next: z.string().optional() });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) {
+      return reply.code(400).send({ error: "号码和验证码不能为空 / number and code are required" });
+    }
+
+    let userId: string;
+    try {
+      userId = await loginWithTotp(db, sessionSecret, parsed.data.number, parsed.data.code);
     } catch (err) {
       if (err instanceof DomainError) {
         return reply.code(400).send({ error: err.message });
@@ -173,15 +154,13 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
       throw err;
     }
 
+    setSessionCookie(reply, userId);
+
     if (isSafeNext(parsed.data.next)) {
       return reply.redirect(parsed.data.next);
     }
 
-    return reply.send({
-      ok: true,
-      number: number.toString(),
-      message: `你的 Weid 号是 @${number}，越早注册号越靠前，此号终身归你。/ Your Weid number is @${number} — permanently yours.`,
-    });
+    return reply.redirect("/me");
   });
 
   app.get("/me", async (req, reply) => {
@@ -190,7 +169,7 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
 
     const info = await whoami(db, userId);
     if (!info) {
-      return reply.code(404).send({ error: "你还没有 Weid 号，请先用 /auth/register 注册 / no Weid number yet" });
+      return reply.code(404).send({ error: "账号数据异常，请重新登录 / account data inconsistent, please log in again" });
     }
     return info;
   });
@@ -201,7 +180,7 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
 
     const account = await getAccountByUserId(db, userId);
     if (!account) {
-      return reply.code(404).send({ error: "你还没有 Weid 号，请先注册 / no Weid number yet" });
+      return reply.code(404).send({ error: "账号数据异常，请重新登录 / account data inconsistent, please log in again" });
     }
 
     const schema = z.object({

@@ -48,7 +48,7 @@ export async function mcpRoutes(app: FastifyInstance, opts: McpRouteOptions) {
     }
 
     reply.hijack();
-    const server = buildMcpServer({ db, userId: verified.userId });
+    const server = buildMcpServer({ db, userId: verified.userId, authBaseUrl });
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
     try {
       await server.connect(transport);

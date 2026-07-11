@@ -13,10 +13,11 @@ import {
 
 export const users = pgTable("users", {
   id: varchar("id", { length: 26 }).primaryKey(), // ulid
-  // scrypt hash (salt + derived key) of the user's own chosen password. The
-  // number is public (meant to be shared), so it can't double as a login
-  // secret; login is number + password, looked up by number, not by this hash.
-  passwordHash: text("password_hash").notNull(),
+  // AES-256-GCM ciphertext (iv:data:tag, hex) of the user's TOTP secret, keyed
+  // off SESSION_SECRET. The number is public (meant to be shared), so it
+  // can't double as a login secret; login is number + current 6-digit
+  // authenticator code, looked up by number, not by this column.
+  totpSecretEncrypted: text("totp_secret_encrypted").notNull(),
   locale: varchar("locale", { length: 5 }).notNull().default("zh"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

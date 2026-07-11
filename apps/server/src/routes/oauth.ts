@@ -54,15 +54,15 @@ function chooserPage(next: string): string {
 
   <h2>还没有 Weid 号？</h2>
   <form method="post" action="/auth/identity/new">
-    <input type="password" name="password" required minlength="8" placeholder="设一个密码（至少 8 位）">
+    <input type="text" name="nickname" required maxlength="30" placeholder="给自己起个昵称，任意语言">
     ${nextField}
-    <button type="submit">注册新号</button>
+    <button type="submit">生成验证器密钥，注册新号</button>
   </form>
 
   <h2>已经有号了？</h2>
   <form method="post" action="/auth/identity/login">
     <input type="text" name="number" required placeholder="你的 Weid 号">
-    <input type="password" name="password" required placeholder="密码">
+    <input type="text" name="code" required inputmode="numeric" pattern="[0-9]{6}" placeholder="验证器 App 里的 6 位验证码">
     ${nextField}
     <button type="submit">登录</button>
   </form>
@@ -71,12 +71,10 @@ function chooserPage(next: string): string {
 
 function consentPage(
   clientName: string,
-  account: { number: bigint; nickname: string } | null,
+  account: { number: bigint; nickname: string },
   query: z.infer<typeof AuthorizeQuery>,
 ): string {
-  const identityLine = account
-    ? `<strong>${escapeHtml(clientName)}</strong> 想要访问你的 Weid 账号（@${account.number} ${escapeHtml(account.nickname)}）。`
-    : `<strong>${escapeHtml(clientName)}</strong> 想要连接你的 Weid 账号。你还没有号码——同意后可以直接让 AI 调用 register_account 注册。`;
+  const identityLine = `<strong>${escapeHtml(clientName)}</strong> 想要访问你的 Weid 账号（@${account.number} ${escapeHtml(account.nickname)}）。`;
   return `<!doctype html><html><head><meta charset="utf-8"><title>weid.ai — 授权</title></head>
 <body>
   <h1>授权请求</h1>
@@ -171,6 +169,12 @@ export async function oauthRoutes(app: FastifyInstance, opts: OAuthRouteOptions)
     }
 
     const account = await getAccountByUserId(db, session.userId);
+    if (!account) {
+      // Every identity now claims a number atomically at creation (see
+      // domain/identity.ts) — this should be unreachable for new logins.
+      // Only a leftover session from before that change could land here.
+      return reply.code(409).send({ error: "账号数据异常，请到 /auth/logout 清除登录状态后重试 / account data inconsistent, log out and try again" });
+    }
     return reply.type("text/html").send(consentPage(client.clientName, account, parsed.data));
   });
 

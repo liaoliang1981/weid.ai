@@ -2,7 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { Db } from "@weid/db";
 import { DomainError } from "./domain/errors.js";
-import { registerAccount, updateProfile, whoami, requireAccount, requireAccountNumber } from "./domain/account.js";
+import { updateProfile, whoami, requireAccount, requireAccountNumber } from "./domain/account.js";
 import {
   sendFriendRequest,
   listFriendRequests,
@@ -33,10 +33,11 @@ async function guarded<T>(fn: () => Promise<T>, format: (value: T) => string) {
 export interface McpToolContext {
   db: Db;
   userId: string;
+  authBaseUrl: string;
 }
 
 export function buildMcpServer(ctx: McpToolContext): McpServer {
-  const { db, userId } = ctx;
+  const { db, userId, authBaseUrl } = ctx;
   const server = new McpServer({ name: "weid-network", version: "0.1.0" });
 
   server.registerTool(
@@ -49,27 +50,10 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     async () => {
       const info = await whoami(db, userId);
       if (!info) {
-        return ok("你还没有 Weid 号，请先用 register_account 注册 / you don't have a Weid number yet — register first with register_account");
+        return ok("账号数据异常，请到 " + authBaseUrl + " 重新登录 / account data inconsistent, please log in again");
       }
       return ok(JSON.stringify(info, null, 2));
     },
-  );
-
-  server.registerTool(
-    "register_account",
-    {
-      description:
-        "为当前用户分配一个 Weid 号码（系统顺序取号，不可自选）并设置昵称。每用户限 1 个免费号码。",
-      inputSchema: {
-        nickname: z.string().min(1).max(30).describe("想给自己起的昵称，任意语言，1-30 字符"),
-      },
-    },
-    async ({ nickname }) =>
-      guarded(
-        () => registerAccount(db, userId, nickname),
-        (number) =>
-          `你的 Weid 号是 @${number}，越早注册号越靠前，此号终身归你。/ Your Weid number is @${number} — permanently yours.`,
-      ),
   );
 
   server.registerTool(

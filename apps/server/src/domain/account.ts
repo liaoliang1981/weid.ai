@@ -83,7 +83,7 @@ export async function getAccountByUserId(db: Db, userId: string) {
 export async function requireAccount(db: Db, userId: string) {
   const account = await getAccountByUserId(db, userId);
   if (!account) {
-    throw new DomainError("你还没有 Weid 号，请先用 register_account 注册 / you don't have a Weid number yet — register first with register_account");
+    throw new DomainError("账号数据异常，请在 auth.weid.ai 重新登录 / account data inconsistent, please log in again at auth.weid.ai");
   }
   return account;
 }
