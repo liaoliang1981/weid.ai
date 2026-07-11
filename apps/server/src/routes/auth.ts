@@ -85,9 +85,14 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
     });
   }
 
-  app.get("/auth/logout", async (_req, reply) => {
+  // Optional ?next= lets a caller (see routes/oauth.ts consentPage's
+  // "switch account" link) drop the user straight back into the /authorize
+  // flow they came from after clearing the session, instead of just the
+  // generic homepage.
+  app.get("/auth/logout", async (req, reply) => {
     reply.clearCookie(SESSION_COOKIE, { path: "/" });
-    return reply.redirect("/");
+    const next = (req.query as Record<string, string | undefined>)?.next;
+    return reply.redirect(isSafeNext(next) ? next : "/");
   });
 
   // Standalone entry point on auth.weid.ai — no functional form here at

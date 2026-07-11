@@ -73,8 +73,16 @@ function consentPage(
   clientName: string,
   account: { number: bigint; nickname: string },
   query: z.infer<typeof AuthorizeQuery>,
+  authorizeUrl: string,
 ): string {
   const identityLine = `<strong>${escapeHtml(clientName)}</strong> wants to access your Weid account (@${account.number} ${escapeHtml(account.nickname)}).`;
+  // The browser's auth.weid.ai session is reused across every connector you
+  // authorize from it (standard SSO behavior) — if you're trying to give
+  // THIS connector a separate, brand-new Weid identity rather than your
+  // existing one, this link logs the current session out and drops you
+  // back into this same /authorize flow, which will then show the
+  // register/login chooser instead of skipping straight to consent.
+  const switchAccountHref = `/auth/logout?next=${encodeURIComponent(authorizeUrl)}`;
   return `<!doctype html><html><head><meta charset="utf-8"><title>weid.ai — Authorize</title></head>
 <body>
   <h1>Authorization request</h1>
@@ -84,6 +92,7 @@ function consentPage(
     <button type="submit" name="action" value="approve">Approve</button>
     <button type="submit" name="action" value="deny">Deny</button>
   </form>
+  <p><a href="${escapeHtml(switchAccountHref)}">Not this account? Log out and use a different Weid number</a></p>
 </body></html>`;
 }
 
@@ -175,7 +184,7 @@ export async function oauthRoutes(app: FastifyInstance, opts: OAuthRouteOptions)
       // Only a leftover session from before that change could land here.
       return reply.code(409).send({ error: "账号数据异常，请到 /auth/logout 清除登录状态后重试 / account data inconsistent, log out and try again" });
     }
-    return reply.type("text/html").send(consentPage(client.clientName, account, parsed.data));
+    return reply.type("text/html").send(consentPage(client.clientName, account, parsed.data, next));
   });
 
   app.post("/authorize/approve", async (req, reply) => {
