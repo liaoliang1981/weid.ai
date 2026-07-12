@@ -1,4 +1,4 @@
-import { and, eq, or, gt, lt, desc, sql } from "drizzle-orm";
+import { and, eq, or, gt, lt, desc, sql, inArray } from "drizzle-orm";
 import { accounts, messages, type Db } from "@weid/db";
 import { ulid } from "ulid";
 import { DomainError } from "./errors.js";
@@ -120,13 +120,15 @@ export async function checkInbox(
   }));
 }
 
-function toMessageView(row: typeof messages.$inferSelect, myNumber: bigint) {
+function toMessageView(row: typeof messages.$inferSelect, myNumber: bigint, nicknames: Map<bigint, string>) {
   const body = row.body as MessageBody;
   return {
     id: row.id,
     threadId: row.threadId,
     from: row.fromNumber.toString(),
+    fromNickname: nicknames.get(row.fromNumber) ?? null,
     to: row.toNumber.toString(),
+    toNickname: nicknames.get(row.toNumber) ?? null,
     direction: row.fromNumber === myNumber ? ("outgoing" as const) : ("incoming" as const),
     subject: row.subject ? wrapUntrusted(row.subject) : "",
     text: wrapUntrusted(body.text),
@@ -167,5 +169,12 @@ export async function readMessage(
       .where(and(eq(messages.toNumber, myNumber), or(...unreadIds.map((id) => eq(messages.id, id)))));
   }
 
-  return visible.map((r) => toMessageView(r, myNumber));
+  const numbers = [...new Set(visible.flatMap((r) => [r.fromNumber, r.toNumber]))];
+  const accountRows = await db
+    .select({ number: accounts.number, nickname: accounts.nickname })
+    .from(accounts)
+    .where(inArray(accounts.number, numbers));
+  const nicknames = new Map(accountRows.map((a) => [a.number, a.nickname]));
+
+  return visible.map((r) => toMessageView(r, myNumber, nicknames));
 }
