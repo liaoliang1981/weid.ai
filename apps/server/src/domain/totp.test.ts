@@ -48,10 +48,10 @@ describe("totp", () => {
 
   it("builds an otpauth:// URL containing the secret and account label", () => {
     const secret = generateTotpSecret();
-    const url = totpAuthUrl(secret, "@10024");
+    const url = totpAuthUrl(secret, "WEID-10024");
     expect(url.startsWith("otpauth://totp/")).toBe(true);
     expect(url).toContain(`secret=${secret}`);
-    expect(decodeURIComponent(url)).toContain("weid.ai:@10024");
+    expect(decodeURIComponent(url)).toContain("weid.ai:WEID-10024");
   });
 
   it("round-trips encryption keyed off the session secret", () => {

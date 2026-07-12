@@ -5,6 +5,7 @@ import { ulid } from "ulid";
 import { eq, and, isNull, gt } from "drizzle-orm";
 import { oauthClients, oauthAuthorizationCodes, oauthTokens, type Db } from "@weid/db";
 import { getAccountByUserId } from "../domain/account.js";
+import { formatNumber } from "../domain/numbers.js";
 import { verifySessionToken } from "../session.js";
 
 const AUTH_CODE_TTL_MS = 5 * 60 * 1000;
@@ -75,7 +76,7 @@ function consentPage(
   query: z.infer<typeof AuthorizeQuery>,
   authorizeUrl: string,
 ): string {
-  const identityLine = `<strong>${escapeHtml(clientName)}</strong> wants to access your Weid account (@${account.number} ${escapeHtml(account.nickname)}).`;
+  const identityLine = `<strong>${escapeHtml(clientName)}</strong> wants to access your Weid account (${formatNumber(account.number)} ${escapeHtml(account.nickname)}).`;
   // The browser's auth.weid.ai session is reused across every connector you
   // authorize from it (standard SSO behavior) — if you're trying to give
   // THIS connector a separate, brand-new Weid identity rather than your

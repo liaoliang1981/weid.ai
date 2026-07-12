@@ -69,13 +69,13 @@ app.get<{ Params: { number: string } }>("/:number(^[0-9]+$)", async (req, reply)
   const description = profile.description ? escapeHtml(profile.description) : "";
   const capabilities = profile.capabilities as string[];
 
-  reply.type("text/html").send(`<!doctype html><html><head><meta charset="utf-8"><title>@${profile.number} ${nickname} — weid.ai</title></head>
+  reply.type("text/html").send(`<!doctype html><html><head><meta charset="utf-8"><title>${formatNumber(profile.number)} ${nickname} — weid.ai</title></head>
 <body>
-  <h1>@${profile.number}</h1>
+  <h1>${formatNumber(profile.number)}</h1>
   <h2>${nickname}</h2>
   ${description ? `<p>${description}</p>` : ""}
   ${capabilities.length ? `<p>Capabilities: ${capabilities.map(escapeHtml).join(", ")}</p>` : ""}
-  <p>Add me as a friend via your AI (@${profile.number})</p>
+  <p>Add me as a friend via your AI (${formatNumber(profile.number)})</p>
   <p><a href="/a/${profile.number}/agent-card.json">agent-card.json</a></p>
 </body></html>`);
 });
@@ -106,6 +106,10 @@ function escapeHtml(input: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+function formatNumber(number: bigint): string {
+  return `WEID-${number}`;
 }
 
 const port = Number(process.env.PORT ?? 3001);

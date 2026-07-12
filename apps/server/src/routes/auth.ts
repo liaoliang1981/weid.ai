@@ -5,6 +5,7 @@ import { type Db } from "@weid/db";
 import { createSessionToken, verifySessionToken } from "../session.js";
 import { updateProfile, getAccountByUserId, whoami } from "../domain/account.js";
 import { createIdentity, loginWithTotp } from "../domain/identity.js";
+import { formatNumber } from "../domain/numbers.js";
 import { DomainError } from "../domain/errors.js";
 
 const SESSION_COOKIE = "session";
@@ -34,7 +35,7 @@ async function totpSecretPage(number: bigint, secret: string, otpauthUrl: string
   const qrDataUrl = await QRCode.toDataURL(otpauthUrl, { margin: 1, width: 240 });
   return `<!doctype html><html><head><meta charset="utf-8"><title>weid.ai — Authenticator key</title></head>
 <body>
-  <h1>Your Weid number is @${number}</h1>
+  <h1>Your Weid number is ${formatNumber(number)}</h1>
   <p>Scan this with Google Authenticator, Authy, or a similar app:</p>
   <p><img src="${qrDataUrl}" width="240" height="240" alt="Scan to add to your authenticator app"></p>
   <p>If your app can't scan, enter this key manually instead:</p>

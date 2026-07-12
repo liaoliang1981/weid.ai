@@ -93,7 +93,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     {
       description: "按号码查公开名片（昵称、描述、能力、认证等级、是否已是好友）。",
       inputSchema: {
-        number: z.string().describe("Weid 号码，接受 @10024、10024、10024@weid.ai 三种写法"),
+        number: z.string().describe("Weid 号码，接受 WEID-10024、10024、@10024、10024@weid.ai 等写法，展示时用 WEID-10024"),
       },
     },
     async ({ number }) =>
@@ -112,7 +112,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
       description:
         "向某个 Weid 号码发好友申请，必须附验证语说明来意（≤100 字）。对方接受后才能互相发消息。",
       inputSchema: {
-        to_number: z.string().describe("对方 Weid 号码，接受 @10024、10024、10024@weid.ai 三种写法"),
+        to_number: z.string().describe("对方 Weid 号码，接受 WEID-10024、10024、@10024、10024@weid.ai 等写法，展示时用 WEID-10024"),
         intro: z.string().min(1).max(100).describe("验证语，说明来意，≤100 字"),
       },
     },
@@ -229,7 +229,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
       description:
         "发送消息，一步发出。发送前对方必须已经是好友，否则会被拒绝并提示先用 send_friend_request。",
       inputSchema: {
-        to_number: z.string().describe("对方 Weid 号码，接受 @10024、10024、10024@weid.ai 三种写法"),
+        to_number: z.string().describe("对方 Weid 号码，接受 WEID-10024、10024、@10024、10024@weid.ai 等写法，展示时用 WEID-10024"),
         subject: z.string().max(200).optional(),
         body_text: z.string().min(1).describe("消息正文，自然语言，必须自足"),
         structured: z

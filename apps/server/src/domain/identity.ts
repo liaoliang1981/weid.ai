@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { ulid } from "ulid";
 import { accounts, users, type Db } from "@weid/db";
 import { DomainError } from "./errors.js";
-import { normalizeNumber } from "./numbers.js";
+import { normalizeNumber, formatNumber } from "./numbers.js";
 import { registerAccount } from "./account.js";
 import { encryptTotpSecret, generateTotpSecret, totpAuthUrl, verifyTotpCode, decryptTotpSecret } from "./totp.js";
 
@@ -18,7 +18,7 @@ export interface NewIdentity {
 // number, and the TOTP secret are all minted together in one step, and the
 // QR code shown to the user is labeled with the real number from the start
 // (one scan, not "scan once now, scan again after you have a number").
-// The number is public (meant to be shared: "add me @10024"), so it can
+// The number is public (meant to be shared: "add me WEID-10024"), so it can
 // never double as a login secret — a TOTP authenticator-app code is that
 // secret instead. Login is number + current 6-digit code, looked up by
 // number. The raw secret is shown to the user exactly once (at creation)
@@ -28,7 +28,7 @@ export async function createIdentity(db: Db, sessionSecret: string, nickname: st
   const secret = generateTotpSecret();
   await db.insert(users).values({ id: userId, totpSecretEncrypted: encryptTotpSecret(sessionSecret, secret) });
   const number = await registerAccount(db, userId, nickname);
-  return { userId, number, secret, otpauthUrl: totpAuthUrl(secret, `@${number}`) };
+  return { userId, number, secret, otpauthUrl: totpAuthUrl(secret, formatNumber(number)) };
 }
 
 export async function loginWithTotp(db: Db, sessionSecret: string, numberRaw: string, code: string): Promise<string> {
