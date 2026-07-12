@@ -3,10 +3,11 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import type { Db } from "@weid/db";
 import { verifyAccessToken } from "./oauth.js";
 import { buildMcpServer } from "../mcp-tools.js";
+import { getUserLocale } from "../domain/account.js";
 
 const JSON_RPC_UNAUTHORIZED = {
   jsonrpc: "2.0",
-  error: { code: -32001, message: "未授权，请提供有效的 Bearer token / unauthorized, provide a valid Bearer token" },
+  error: { code: -32001, message: "Unauthorized, provide a valid Bearer token" },
   id: null,
 };
 
@@ -48,7 +49,8 @@ export async function mcpRoutes(app: FastifyInstance, opts: McpRouteOptions) {
     }
 
     reply.hijack();
-    const server = buildMcpServer({ db, userId: verified.userId, authBaseUrl });
+    const locale = await getUserLocale(db, verified.userId);
+    const server = buildMcpServer({ db, userId: verified.userId, authBaseUrl, locale });
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
     try {
       await server.connect(transport);

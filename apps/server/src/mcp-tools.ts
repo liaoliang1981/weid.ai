@@ -12,6 +12,7 @@ import {
 import { sendMessage, checkInbox, readMessage } from "./domain/messages.js";
 import { lookup, searchDirectory } from "./domain/directory.js";
 import { wrapUntrusted } from "./domain/security.js";
+import { t, type Locale } from "./i18n/index.js";
 
 function ok(text: string) {
   return { content: [{ type: "text" as const, text }] };
@@ -21,11 +22,11 @@ function errorResult(message: string) {
   return { content: [{ type: "text" as const, text: message }], isError: true };
 }
 
-async function guarded<T>(fn: () => Promise<T>, format: (value: T) => string) {
+async function guarded<T>(locale: Locale, fn: () => Promise<T>, format: (value: T) => string) {
   try {
     return ok(format(await fn()));
   } catch (err) {
-    if (err instanceof DomainError) return errorResult(err.message);
+    if (err instanceof DomainError) return errorResult(err.render(t(locale).errors));
     throw err;
   }
 }
@@ -34,23 +35,24 @@ export interface McpToolContext {
   db: Db;
   userId: string;
   authBaseUrl: string;
+  locale: Locale;
 }
 
 export function buildMcpServer(ctx: McpToolContext): McpServer {
-  const { db, userId, authBaseUrl } = ctx;
+  const { db, userId, authBaseUrl, locale } = ctx;
+  const msg = t(locale);
   const server = new McpServer({ name: "weid-network", version: "0.1.0" });
 
   server.registerTool(
     "whoami",
     {
-      description:
-        "返回当前登录用户的 Weid 号码、昵称、未读消息数、待处理好友申请数。在会话开始或用户问“我的 Weid”时调用。",
+      description: msg.tools.whoami.description,
       inputSchema: {},
     },
     async () => {
       const info = await whoami(db, userId);
       if (!info) {
-        return ok("账号数据异常，请到 " + authBaseUrl + " 重新登录 / account data inconsistent, please log in again");
+        return ok(msg.tools.whoami.accountDataInconsistent(authBaseUrl));
       }
       return ok(JSON.stringify(info, null, 2));
     },
@@ -59,7 +61,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
   server.registerTool(
     "update_profile",
     {
-      description: "更新昵称与名片信息（描述、能力标签、机构、语言、可见性）。",
+      description: msg.tools.updateProfile.description,
       inputSchema: {
         nickname: z.string().min(1).max(30).optional(),
         description: z.string().max(2000).optional(),
@@ -72,6 +74,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     },
     async ({ nickname, description, capabilities, org_name, org_url, languages, visibility }) =>
       guarded(
+        locale,
         async () => {
           const number = await requireAccountNumber(db, userId);
           await updateProfile(db, number, {
@@ -84,20 +87,21 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
             visibility,
           });
         },
-        () => "名片已更新 / profile updated",
+        () => msg.tools.updateProfile.success,
       ),
   );
 
   server.registerTool(
     "lookup",
     {
-      description: "按号码查公开名片（昵称、描述、能力、认证等级、是否已是好友）。",
+      description: msg.tools.lookup.description,
       inputSchema: {
-        number: z.string().describe("Weid 号码，接受 WEID-10024、10024、@10024、10024@weid.ai 等写法，展示时用 WEID-10024"),
+        number: z.string().describe(msg.tools.lookup.numberParam),
       },
     },
     async ({ number }) =>
       guarded(
+        locale,
         async () => {
           const myNumber = await requireAccountNumber(db, userId);
           return lookup(db, myNumber, number);
@@ -109,27 +113,27 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
   server.registerTool(
     "send_friend_request",
     {
-      description:
-        "向某个 Weid 号码发好友申请，必须附验证语说明来意（≤100 字）。对方接受后才能互相发消息。",
+      description: msg.tools.sendFriendRequest.description,
       inputSchema: {
-        to_number: z.string().describe("对方 Weid 号码，接受 WEID-10024、10024、@10024、10024@weid.ai 等写法，展示时用 WEID-10024"),
-        intro: z.string().min(1).max(100).describe("验证语，说明来意，≤100 字"),
+        to_number: z.string().describe(msg.tools.sendFriendRequest.toNumberParam),
+        intro: z.string().min(1).max(100).describe(msg.tools.sendFriendRequest.introParam),
       },
     },
     async ({ to_number, intro }) =>
       guarded(
+        locale,
         async () => {
           const me = await requireAccount(db, userId);
           return sendFriendRequest(db, me.number, to_number, intro);
         },
-        (id) => `好友申请已发送，等待对方同意（申请 id: ${id}）。/ Friend request sent (id: ${id}), waiting for approval.`,
+        (id) => msg.tools.sendFriendRequest.success(id),
       ),
   );
 
   server.registerTool(
     "list_friend_requests",
     {
-      description: "列出收到或发出的好友申请（号码、昵称、验证语、时间）。",
+      description: msg.tools.listFriendRequests.description,
       inputSchema: {
         direction: z.enum(["received", "sent"]).default("received"),
         status: z.enum(["pending", "accepted", "rejected", "expired", "all"]).default("pending"),
@@ -137,10 +141,11 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     },
     async ({ direction, status }) =>
       guarded(
+        locale,
         async () => {
           const myNumber = await requireAccountNumber(db, userId);
           const rows = await listFriendRequests(db, myNumber, direction, status);
-          return rows.map((r) => ({ ...r, intro: wrapUntrusted(r.intro) }));
+          return rows.map((r) => ({ ...r, intro: wrapUntrusted(r.intro, locale) }));
         },
         (rows) => JSON.stringify(rows, null, 2),
       ),
@@ -149,7 +154,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
   server.registerTool(
     "respond_friend_request",
     {
-      description: "处理一条收到的好友申请：同意（accept）或拒绝（reject）。同意后双方即可互发消息。",
+      description: msg.tools.respondFriendRequest.description,
       inputSchema: {
         request_id: z.string().min(1),
         action: z.enum(["accept", "reject"]),
@@ -157,24 +162,26 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     },
     async ({ request_id, action }) =>
       guarded(
+        locale,
         async () => {
           const myNumber = await requireAccountNumber(db, userId);
           await respondFriendRequest(db, myNumber, request_id, action);
         },
-        () => (action === "accept" ? "已同意好友申请 / friend request accepted" : "已拒绝好友申请 / friend request rejected"),
+        () => (action === "accept" ? msg.tools.respondFriendRequest.accepted : msg.tools.respondFriendRequest.rejected),
       ),
   );
 
   server.registerTool(
     "list_contacts",
     {
-      description: "我的通讯录：已经是好友的号码、昵称、成为好友时间。",
+      description: msg.tools.listContacts.description,
       inputSchema: {
         limit: z.number().int().min(1).max(200).default(50),
       },
     },
     async ({ limit }) =>
       guarded(
+        locale,
         async () => {
           const myNumber = await requireAccountNumber(db, userId);
           return listContacts(db, myNumber, limit);
@@ -186,8 +193,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
   server.registerTool(
     "check_inbox",
     {
-      description:
-        "列出收件箱消息摘要（发件号码+昵称、主题、时间、thread_id）。不返回全文，用 read_message 读取全文。",
+      description: msg.tools.checkInbox.description,
       inputSchema: {
         status: z.enum(["unread", "read", "archived", "all"]).default("unread"),
         limit: z.number().int().min(1).max(50).default(10),
@@ -196,9 +202,10 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     },
     async ({ status, limit, cursor }) =>
       guarded(
+        locale,
         async () => {
           const myNumber = await requireAccountNumber(db, userId);
-          return checkInbox(db, myNumber, status, limit, cursor);
+          return checkInbox(db, myNumber, locale, status, limit, cursor);
         },
         (rows) => JSON.stringify(rows, null, 2),
       ),
@@ -207,7 +214,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
   server.registerTool(
     "read_message",
     {
-      description: "读取单条消息全文，或提供 thread_id 读取整个会话串；读取后自动置为已读。",
+      description: msg.tools.readMessage.description,
       inputSchema: {
         message_id: z.string().optional(),
         thread_id: z.string().optional(),
@@ -215,9 +222,10 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     },
     async ({ message_id, thread_id }) =>
       guarded(
+        locale,
         async () => {
           const myNumber = await requireAccountNumber(db, userId);
-          return readMessage(db, myNumber, { messageId: message_id, threadId: thread_id });
+          return readMessage(db, myNumber, locale, { messageId: message_id, threadId: thread_id });
         },
         (rows) => JSON.stringify(rows, null, 2),
       ),
@@ -226,12 +234,11 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
   server.registerTool(
     "send_message",
     {
-      description:
-        "发送消息，一步发出。发送前对方必须已经是好友，否则会被拒绝并提示先用 send_friend_request。",
+      description: msg.tools.sendMessage.description,
       inputSchema: {
-        to_number: z.string().describe("对方 Weid 号码，接受 WEID-10024、10024、@10024、10024@weid.ai 等写法，展示时用 WEID-10024"),
+        to_number: z.string().describe(msg.tools.sendMessage.toNumberParam),
         subject: z.string().max(200).optional(),
-        body_text: z.string().min(1).describe("消息正文，自然语言，必须自足"),
+        body_text: z.string().min(1).describe(msg.tools.sendMessage.bodyTextParam),
         structured: z
           .object({
             intent: z.enum(["inquiry", "reply", "intro", "task", "other"]),
@@ -244,18 +251,19 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     },
     async ({ to_number, subject, body_text, structured, sender_model, reply_to }) =>
       guarded(
+        locale,
         async () => {
           const me = await requireAccount(db, userId);
           return sendMessage(db, me.number, to_number, subject, body_text, structured, sender_model, reply_to);
         },
-        (result) => `消息已发送（message id: ${result.id}, thread: ${result.threadId}）。/ Message sent.`,
+        (result) => msg.tools.sendMessage.success(result.id, result.threadId),
       ),
   );
 
   server.registerTool(
     "search_directory",
     {
-      description: "在公开名片中按昵称/能力/描述全文检索，返回号码+昵称列表（电话簿）。",
+      description: msg.tools.searchDirectory.description,
       inputSchema: {
         query: z.string().min(1),
         limit: z.number().int().min(1).max(50).default(10),
@@ -263,6 +271,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     },
     async ({ query, limit }) =>
       guarded(
+        locale,
         async () => {
           await requireAccountNumber(db, userId);
           return searchDirectory(db, query, limit);

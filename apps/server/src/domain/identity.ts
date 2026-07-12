@@ -5,6 +5,7 @@ import { DomainError } from "./errors.js";
 import { normalizeNumber, formatNumber } from "./numbers.js";
 import { registerAccount } from "./account.js";
 import { encryptTotpSecret, generateTotpSecret, totpAuthUrl, verifyTotpCode, decryptTotpSecret } from "./totp.js";
+import type { Locale } from "../i18n/index.js";
 
 export interface NewIdentity {
   userId: string;
@@ -22,11 +23,14 @@ export interface NewIdentity {
 // never double as a login secret — a TOTP authenticator-app code is that
 // secret instead. Login is number + current 6-digit code, looked up by
 // number. The raw secret is shown to the user exactly once (at creation)
-// and only ever stored encrypted at rest.
-export async function createIdentity(db: Db, sessionSecret: string, nickname: string): Promise<NewIdentity> {
+// and only ever stored encrypted at rest. `locale` is detected once here
+// (from the registration request's Accept-Language header) and stuck to
+// this identity for every future MCP tool call, since the MCP transport
+// itself doesn't carry a reliable per-request language signal.
+export async function createIdentity(db: Db, sessionSecret: string, nickname: string, locale: Locale): Promise<NewIdentity> {
   const userId = ulid();
   const secret = generateTotpSecret();
-  await db.insert(users).values({ id: userId, totpSecretEncrypted: encryptTotpSecret(sessionSecret, secret) });
+  await db.insert(users).values({ id: userId, totpSecretEncrypted: encryptTotpSecret(sessionSecret, secret), locale });
   const number = await registerAccount(db, userId, nickname);
   return { userId, number, secret, otpauthUrl: totpAuthUrl(secret, formatNumber(number)) };
 }
@@ -34,22 +38,22 @@ export async function createIdentity(db: Db, sessionSecret: string, nickname: st
 export async function loginWithTotp(db: Db, sessionSecret: string, numberRaw: string, code: string): Promise<string> {
   const number = normalizeNumber(numberRaw);
   if (number === null) {
-    throw new DomainError(`号码格式不对: ${numberRaw} / invalid number format`);
+    throw new DomainError((e) => e.invalidNumberFormat(numberRaw));
   }
 
   const [account] = await db.select().from(accounts).where(eq(accounts.number, number)).limit(1);
   if (!account) {
-    throw new DomainError("号码或验证码不对 / number or code is incorrect");
+    throw new DomainError((e) => e.loginIncorrect);
   }
 
   const [user] = await db.select().from(users).where(eq(users.id, account.userId)).limit(1);
   if (!user) {
-    throw new DomainError("号码或验证码不对 / number or code is incorrect");
+    throw new DomainError((e) => e.loginIncorrect);
   }
 
   const secret = decryptTotpSecret(sessionSecret, user.totpSecretEncrypted);
   if (!verifyTotpCode(secret, code)) {
-    throw new DomainError("号码或验证码不对 / number or code is incorrect");
+    throw new DomainError((e) => e.loginIncorrect);
   }
 
   return user.id;

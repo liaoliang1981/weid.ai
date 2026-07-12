@@ -1,7 +1,8 @@
 import { eq, and, gt, sql } from "drizzle-orm";
-import { accounts, agentCards, allocateNumber, accountRegisterAttempts, friendRequests, messages, type Db } from "@weid/db";
+import { accounts, agentCards, allocateNumber, accountRegisterAttempts, friendRequests, messages, users, type Db } from "@weid/db";
 import { ulid } from "ulid";
 import { DomainError } from "./errors.js";
+import { DEFAULT_LOCALE, SUPPORTED_LOCALES, type Locale } from "../i18n/index.js";
 
 const REGISTER_ATTEMPTS_PER_DAY = 3;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -14,7 +15,7 @@ export function sanitizeNickname(input: string): string {
 export async function registerAccount(db: Db, userId: string, rawNickname: string): Promise<bigint> {
   const [existing] = await db.select().from(accounts).where(eq(accounts.userId, userId)).limit(1);
   if (existing) {
-    throw new DomainError("你已经有一个 Weid 号了 / you already have a Weid number");
+    throw new DomainError((e) => e.alreadyHaveNumber);
   }
 
   const [{ count }] = await db
@@ -27,13 +28,13 @@ export async function registerAccount(db: Db, userId: string, rawNickname: strin
       ),
     );
   if (count >= REGISTER_ATTEMPTS_PER_DAY) {
-    throw new DomainError("今天注册尝试次数太多了，请明天再试 / too many registration attempts today, try again tomorrow");
+    throw new DomainError((e) => e.tooManyRegistrationAttempts);
   }
   await db.insert(accountRegisterAttempts).values({ id: ulid(), userId });
 
   const nickname = sanitizeNickname(rawNickname).slice(0, 30);
   if (!nickname) {
-    throw new DomainError("昵称不能为空 / nickname is required");
+    throw new DomainError((e) => e.nicknameRequired);
   }
 
   const number = await allocateNumber(db);
@@ -56,7 +57,7 @@ export async function updateProfile(db: Db, number: bigint, input: ProfileUpdate
   if (input.nickname !== undefined) {
     const nickname = sanitizeNickname(input.nickname).slice(0, 30);
     if (!nickname) {
-      throw new DomainError("昵称不能为空 / nickname is required");
+      throw new DomainError((e) => e.nicknameRequired);
     }
     await db.update(accounts).set({ nickname }).where(eq(accounts.number, number));
   }
@@ -83,7 +84,7 @@ export async function getAccountByUserId(db: Db, userId: string) {
 export async function requireAccount(db: Db, userId: string) {
   const account = await getAccountByUserId(db, userId);
   if (!account) {
-    throw new DomainError("账号数据异常，请在 auth.weid.ai 重新登录 / account data inconsistent, please log in again at auth.weid.ai");
+    throw new DomainError((e) => e.accountDataInconsistent);
   }
   return account;
 }
@@ -91,6 +92,16 @@ export async function requireAccount(db: Db, userId: string) {
 export async function requireAccountNumber(db: Db, userId: string): Promise<bigint> {
   const account = await requireAccount(db, userId);
   return account.number;
+}
+
+// The user's locale is fixed at registration (from their browser's
+// Accept-Language header — see routes/auth.ts) and reused for every MCP
+// tool call after that, since the MCP transport itself carries no reliable
+// per-request language signal for the human on the other end.
+export async function getUserLocale(db: Db, userId: string): Promise<Locale> {
+  const [user] = await db.select({ locale: users.locale }).from(users).where(eq(users.id, userId)).limit(1);
+  const locale = user?.locale as Locale | undefined;
+  return locale && (SUPPORTED_LOCALES as readonly string[]).includes(locale) ? locale : DEFAULT_LOCALE;
 }
 
 export interface WhoAmI {

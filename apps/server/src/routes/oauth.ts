@@ -7,6 +7,7 @@ import { oauthClients, oauthAuthorizationCodes, oauthTokens, type Db } from "@we
 import { getAccountByUserId } from "../domain/account.js";
 import { formatNumber } from "../domain/numbers.js";
 import { verifySessionToken } from "../session.js";
+import { pickLocale, t } from "../i18n/index.js";
 
 const AUTH_CODE_TTL_MS = 5 * 60 * 1000;
 const ACCESS_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -47,36 +48,39 @@ function hiddenFields(query: Record<string, string | undefined>): string {
     .join("\n    ");
 }
 
-function chooserPage(next: string): string {
+function chooserPage(msg: ReturnType<typeof t>, next: string): string {
+  const p = msg.pages.chooser;
   const nextField = `<input type="hidden" name="next" value="${escapeHtml(next)}">`;
-  return `<!doctype html><html><head><meta charset="utf-8"><title>weid.ai — Log in</title></head>
+  return `<!doctype html><html><head><meta charset="utf-8"><title>${p.title}</title></head>
 <body>
-  <h1>Log in to weid.ai to authorize</h1>
+  <h1>${p.heading}</h1>
 
-  <h2>Don't have a Weid number yet?</h2>
+  <h2>${p.noNumberHeading}</h2>
   <form method="post" action="/auth/identity/new">
-    <input type="text" name="nickname" required maxlength="30" placeholder="Pick a nickname, any language">
+    <input type="text" name="nickname" required maxlength="30" placeholder="${escapeHtml(p.nicknamePlaceholder)}">
     ${nextField}
-    <button type="submit">Generate authenticator key, register</button>
+    <button type="submit">${p.registerButton}</button>
   </form>
 
-  <h2>Already have a number?</h2>
+  <h2>${p.haveNumberHeading}</h2>
   <form method="post" action="/auth/identity/login">
-    <input type="text" name="number" required placeholder="Your Weid number">
-    <input type="text" name="code" required inputmode="numeric" pattern="[0-9]{6}" placeholder="6-digit code from your authenticator app">
+    <input type="text" name="number" required placeholder="${escapeHtml(p.numberPlaceholder)}">
+    <input type="text" name="code" required inputmode="numeric" pattern="[0-9]{6}" placeholder="${escapeHtml(p.codePlaceholder)}">
     ${nextField}
-    <button type="submit">Log in</button>
+    <button type="submit">${p.loginButton}</button>
   </form>
 </body></html>`;
 }
 
 function consentPage(
+  msg: ReturnType<typeof t>,
   clientName: string,
   account: { number: bigint; nickname: string },
   query: z.infer<typeof AuthorizeQuery>,
   authorizeUrl: string,
 ): string {
-  const identityLine = `<strong>${escapeHtml(clientName)}</strong> wants to access your Weid account (${formatNumber(account.number)} ${escapeHtml(account.nickname)}).`;
+  const p = msg.pages.consent;
+  const identityLine = p.identityLine(escapeHtml(clientName), formatNumber(account.number), escapeHtml(account.nickname));
   // The browser's auth.weid.ai session is reused across every connector you
   // authorize from it (standard SSO behavior) — if you're trying to give
   // THIS connector a separate, brand-new Weid identity rather than your
@@ -84,16 +88,16 @@ function consentPage(
   // back into this same /authorize flow, which will then show the
   // register/login chooser instead of skipping straight to consent.
   const switchAccountHref = `/auth/logout?next=${encodeURIComponent(authorizeUrl)}`;
-  return `<!doctype html><html><head><meta charset="utf-8"><title>weid.ai — Authorize</title></head>
+  return `<!doctype html><html><head><meta charset="utf-8"><title>${p.title}</title></head>
 <body>
-  <h1>Authorization request</h1>
+  <h1>${p.heading}</h1>
   <p>${identityLine}</p>
   <form method="post" action="/authorize/approve">
     ${hiddenFields(query)}
-    <button type="submit" name="action" value="approve">Approve</button>
-    <button type="submit" name="action" value="deny">Deny</button>
+    <button type="submit" name="action" value="approve">${p.approveButton}</button>
+    <button type="submit" name="action" value="deny">${p.denyButton}</button>
   </form>
-  <p><a href="${escapeHtml(switchAccountHref)}">Not this account? Log out and use a different Weid number</a></p>
+  <p><a href="${escapeHtml(switchAccountHref)}">${p.switchAccountLink}</a></p>
 </body></html>`;
 }
 
@@ -170,12 +174,13 @@ export async function oauthRoutes(app: FastifyInstance, opts: OAuthRouteOptions)
       return reply.code(400).send({ error: "invalid_client", error_description: "unknown client_id or redirect_uri" });
     }
 
+    const msg = t(pickLocale(req.headers["accept-language"]));
     const session = verifySessionToken(sessionSecret, req.cookies?.session);
     const queryString = new URLSearchParams(req.query as Record<string, string>).toString();
     const next = `/authorize?${queryString}`;
 
     if (!session) {
-      return reply.type("text/html").send(chooserPage(next));
+      return reply.type("text/html").send(chooserPage(msg, next));
     }
 
     const account = await getAccountByUserId(db, session.userId);
@@ -183,9 +188,9 @@ export async function oauthRoutes(app: FastifyInstance, opts: OAuthRouteOptions)
       // Every identity now claims a number atomically at creation (see
       // domain/identity.ts) — this should be unreachable for new logins.
       // Only a leftover session from before that change could land here.
-      return reply.code(409).send({ error: "账号数据异常，请到 /auth/logout 清除登录状态后重试 / account data inconsistent, log out and try again" });
+      return reply.code(409).send({ error: msg.pages.accountDataInconsistentShort + " — visit /auth/logout and try again" });
     }
-    return reply.type("text/html").send(consentPage(client.clientName, account, parsed.data, next));
+    return reply.type("text/html").send(consentPage(msg, client.clientName, account, parsed.data, next));
   });
 
   app.post("/authorize/approve", async (req, reply) => {

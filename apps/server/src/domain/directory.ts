@@ -7,7 +7,7 @@ import { areFriends } from "./friends.js";
 export async function lookup(db: Db, myNumber: bigint, numberRaw: string) {
   const number = normalizeNumber(numberRaw);
   if (number === null) {
-    throw new DomainError(`号码格式不对: ${numberRaw} / invalid number format`);
+    throw new DomainError((e) => e.invalidNumberFormat(numberRaw));
   }
 
   const [row] = await db
@@ -28,7 +28,7 @@ export async function lookup(db: Db, myNumber: bigint, numberRaw: string) {
     .limit(1);
 
   if (!row || row.status !== "active") {
-    throw new DomainError(`找不到这个 Weid 号: ${number} / number not found`);
+    throw new DomainError((e) => e.numberNotFound(number.toString()));
   }
 
   const isFriend = number === myNumber ? false : await areFriends(db, myNumber, number);

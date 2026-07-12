@@ -30,22 +30,22 @@ export async function sendFriendRequest(
 ): Promise<string> {
   const toNumber = normalizeNumber(toNumberRaw);
   if (toNumber === null) {
-    throw new DomainError(`号码格式不对: ${toNumberRaw} / invalid number format`);
+    throw new DomainError((e) => e.invalidNumberFormat(toNumberRaw));
   }
   if (toNumber === fromNumber) {
-    throw new DomainError("不能加自己为好友 / cannot friend yourself");
+    throw new DomainError((e) => e.cannotFriendSelf);
   }
   if (!intro || intro.length > 100) {
-    throw new DomainError("验证语必须填写且不超过 100 字 / intro is required, max 100 chars");
+    throw new DomainError((e) => e.introRequired);
   }
 
   const [dest] = await db.select().from(accounts).where(eq(accounts.number, toNumber)).limit(1);
   if (!dest || dest.status !== "active") {
-    throw new DomainError(`找不到这个 Weid 号或已停用: ${toNumber} / number not found or suspended`);
+    throw new DomainError((e) => e.numberNotFoundOrSuspended(toNumber.toString()));
   }
 
   if (await areFriends(db, fromNumber, toNumber)) {
-    throw new DomainError("你们已经是好友了 / already friends");
+    throw new DomainError((e) => e.alreadyFriends);
   }
 
   const [pending] = await db
@@ -60,7 +60,7 @@ export async function sendFriendRequest(
     )
     .limit(1);
   if (pending) {
-    throw new DomainError("已经有一个待处理的好友申请了 / a pending request already exists");
+    throw new DomainError((e) => e.pendingRequestExists);
   }
 
   const [rejected] = await db
@@ -76,7 +76,7 @@ export async function sendFriendRequest(
     )
     .limit(1);
   if (rejected) {
-    throw new DomainError("对方最近拒绝过你的申请，7 天内不能再次申请 / recently rejected, wait 7 days before retrying");
+    throw new DomainError((e) => e.recentlyRejectedCooldown);
   }
 
   const [{ count }] = await db
@@ -86,7 +86,7 @@ export async function sendFriendRequest(
       and(eq(friendRequests.fromNumber, fromNumber), gt(friendRequests.createdAt, new Date(Date.now() - DAY_MS))),
     );
   if (count >= FRIEND_REQUESTS_PER_DAY) {
-    throw new DomainError("今天发出的好友申请太多了，请明天再试 / daily friend request limit reached, try again tomorrow");
+    throw new DomainError((e) => e.dailyFriendRequestLimitReached);
   }
 
   const id = ulid();
@@ -140,12 +140,12 @@ export async function respondFriendRequest(
   action: "accept" | "reject",
 ): Promise<void> {
   const [row] = await db.select().from(friendRequests).where(eq(friendRequests.id, requestId)).limit(1);
-  if (!row) throw new DomainError("找不到这个好友申请 / friend request not found");
+  if (!row) throw new DomainError((e) => e.friendRequestNotFound);
   if (row.toNumber !== myNumber) {
-    throw new DomainError("这不是发给你的好友申请 / this request is not addressed to you");
+    throw new DomainError((e) => e.requestNotAddressedToYou);
   }
   if (row.status !== "pending") {
-    throw new DomainError("这个申请已经处理过了 / this request has already been handled");
+    throw new DomainError((e) => e.requestAlreadyHandled);
   }
 
   const newStatus = action === "accept" ? "accepted" : "rejected";

@@ -5,6 +5,7 @@ import { DomainError } from "./errors.js";
 import { normalizeNumber } from "./numbers.js";
 import { areFriends } from "./friends.js";
 import { wrapUntrusted } from "./security.js";
+import type { Locale } from "../i18n/index.js";
 
 const MESSAGES_PER_HOUR = 30;
 const MESSAGES_PER_DAY = 200;
@@ -31,19 +32,19 @@ export async function sendMessage(
 ): Promise<{ id: string; threadId: string }> {
   const toNumber = normalizeNumber(toNumberRaw);
   if (toNumber === null) {
-    throw new DomainError(`号码格式不对: ${toNumberRaw} / invalid number format`);
+    throw new DomainError((e) => e.invalidNumberFormat(toNumberRaw));
   }
   if (!bodyText) {
-    throw new DomainError("消息正文不能为空 / message text is required");
+    throw new DomainError((e) => e.messageTextRequired);
   }
 
   const [dest] = await db.select().from(accounts).where(eq(accounts.number, toNumber)).limit(1);
   if (!dest || dest.status !== "active") {
-    throw new DomainError(`找不到这个 Weid 号或已停用: ${toNumber} / number not found or suspended`);
+    throw new DomainError((e) => e.numberNotFoundOrSuspended(toNumber.toString()));
   }
 
   if (!(await areFriends(db, fromNumber, toNumber))) {
-    throw new DomainError("对方还不是你的好友，请先用 send_friend_request 发好友申请 / not friends yet — use send_friend_request first");
+    throw new DomainError((e) => e.notFriendsYet);
   }
 
   const [{ hourCount }] = await db
@@ -51,14 +52,14 @@ export async function sendMessage(
     .from(messages)
     .where(and(eq(messages.fromNumber, fromNumber), gt(messages.createdAt, new Date(Date.now() - HOUR_MS))));
   if (hourCount >= MESSAGES_PER_HOUR) {
-    throw new DomainError("这一小时发送太多消息了，请稍后再试 / hourly message limit reached, try later");
+    throw new DomainError((e) => e.hourlyLimitReached);
   }
   const [{ dayCount }] = await db
     .select({ dayCount: sql<number>`count(*)::int` })
     .from(messages)
     .where(and(eq(messages.fromNumber, fromNumber), gt(messages.createdAt, new Date(Date.now() - DAY_MS))));
   if (dayCount >= MESSAGES_PER_DAY) {
-    throw new DomainError("今天发送太多消息了，请明天再试 / daily message limit reached, try again tomorrow");
+    throw new DomainError((e) => e.dailyMessageLimitReached);
   }
 
   let threadId = ulid();
@@ -85,6 +86,7 @@ export async function sendMessage(
 export async function checkInbox(
   db: Db,
   myNumber: bigint,
+  locale: Locale,
   status = "unread",
   limit = 10,
   cursor?: string,
@@ -114,13 +116,13 @@ export async function checkInbox(
     threadId: r.threadId,
     from: r.fromNumber.toString(),
     fromNickname: r.fromNickname,
-    subject: r.subject ? wrapUntrusted(r.subject) : "",
+    subject: r.subject ? wrapUntrusted(r.subject, locale) : "",
     status: r.status,
     createdAt: r.createdAt,
   }));
 }
 
-function toMessageView(row: typeof messages.$inferSelect, myNumber: bigint, nicknames: Map<bigint, string>) {
+function toMessageView(row: typeof messages.$inferSelect, myNumber: bigint, nicknames: Map<bigint, string>, locale: Locale) {
   const body = row.body as MessageBody;
   return {
     id: row.id,
@@ -130,8 +132,8 @@ function toMessageView(row: typeof messages.$inferSelect, myNumber: bigint, nick
     to: row.toNumber.toString(),
     toNickname: nicknames.get(row.toNumber) ?? null,
     direction: row.fromNumber === myNumber ? ("outgoing" as const) : ("incoming" as const),
-    subject: row.subject ? wrapUntrusted(row.subject) : "",
-    text: wrapUntrusted(body.text),
+    subject: row.subject ? wrapUntrusted(row.subject, locale) : "",
+    text: wrapUntrusted(body.text, locale),
     structured: body.structured ?? null,
     senderModel: body.sender_model ?? "unknown",
     status: row.status,
@@ -142,10 +144,11 @@ function toMessageView(row: typeof messages.$inferSelect, myNumber: bigint, nick
 export async function readMessage(
   db: Db,
   myNumber: bigint,
+  locale: Locale,
   opts: { messageId?: string; threadId?: string },
 ) {
   if (!opts.messageId && !opts.threadId) {
-    throw new DomainError("必须提供 message_id 或 thread_id / message_id or thread_id is required");
+    throw new DomainError((e) => e.messageOrThreadIdRequired);
   }
 
   const rows = opts.messageId
@@ -158,7 +161,7 @@ export async function readMessage(
 
   const visible = rows.filter((r) => r.fromNumber === myNumber || r.toNumber === myNumber);
   if (visible.length === 0) {
-    throw new DomainError("找不到这条消息或会话 / message or thread not found");
+    throw new DomainError((e) => e.messageOrThreadNotFound);
   }
 
   const unreadIds = visible.filter((r) => r.toNumber === myNumber && r.status === "unread").map((r) => r.id);
@@ -176,5 +179,5 @@ export async function readMessage(
     .where(inArray(accounts.number, numbers));
   const nicknames = new Map(accountRows.map((a) => [a.number, a.nickname]));
 
-  return visible.map((r) => toMessageView(r, myNumber, nicknames));
+  return visible.map((r) => toMessageView(r, myNumber, nicknames, locale));
 }

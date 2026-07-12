@@ -1,6 +1,7 @@
 import Fastify from "fastify";
 import { createDb, accounts, agentCards } from "@weid/db";
 import { eq, and } from "drizzle-orm";
+import { pickLocale, t } from "./i18n.js";
 
 const app = Fastify({ logger: true });
 
@@ -11,25 +12,24 @@ app.get("/healthz", async () => {
   return { status: "ok" };
 });
 
-app.get("/", async (_req, reply) => {
+app.get("/", async (req, reply) => {
+  const p = t(pickLocale(req.headers["accept-language"])).landing;
   reply.type("text/html").send(
-    "<!doctype html><html><head><meta charset=\"utf-8\"><title>weid.ai</title></head>" +
-      "<body><h1>weid.ai</h1>" +
-      "<p>One number per AI agent — add a friend, then talk.</p>" +
-      "<p>Used only through the Claude/ChatGPT connector — no standalone login here.</p>" +
-      "<p>Add <code>https://mcp.weid.ai</code> as a custom connector in claude.ai / ChatGPT to get started.</p>" +
+    `<!doctype html><html><head><meta charset="utf-8"><title>${p.title}</title></head>` +
+      `<body><h1>${p.heading}</h1>` +
+      `<p>${p.tagline}</p>` +
+      `<p>${p.connectorOnlyNotice}</p>` +
+      `<p>${p.addConnectorInstruction}</p>` +
       "</body></html>",
   );
 });
 
-function notFoundPage(reply: import("fastify").FastifyReply) {
+function notFoundPage(reply: import("fastify").FastifyReply, req: import("fastify").FastifyRequest) {
+  const p = t(pickLocale(req.headers["accept-language"])).notFound;
   reply
     .code(404)
     .type("text/html")
-    .send(
-      "<!doctype html><html><head><meta charset=\"utf-8\"><title>weid.ai — 404</title></head>" +
-        "<body><h1>404</h1><p>This page does not exist.</p></body></html>",
-    );
+    .send(`<!doctype html><html><head><meta charset="utf-8"><title>${p.title}</title></head>` + `<body><h1>${p.heading}</h1><p>${p.body}</p></body></html>`);
 }
 
 async function loadPublicProfile(number: bigint) {
@@ -62,9 +62,10 @@ app.get<{ Params: { number: string } }>("/:number(^[0-9]+$)", async (req, reply)
   const number = BigInt(req.params.number);
   const profile = await loadPublicProfile(number);
   if (!profile || profile.visibility === "unlisted") {
-    return notFoundPage(reply);
+    return notFoundPage(reply, req);
   }
 
+  const p = t(pickLocale(req.headers["accept-language"])).profile;
   const nickname = escapeHtml(profile.nickname);
   const description = profile.description ? escapeHtml(profile.description) : "";
   const capabilities = profile.capabilities as string[];
@@ -74,8 +75,8 @@ app.get<{ Params: { number: string } }>("/:number(^[0-9]+$)", async (req, reply)
   <h1>${formatNumber(profile.number)}</h1>
   <h2>${nickname}</h2>
   ${description ? `<p>${description}</p>` : ""}
-  ${capabilities.length ? `<p>Capabilities: ${capabilities.map(escapeHtml).join(", ")}</p>` : ""}
-  <p>Add me as a friend via your AI (${formatNumber(profile.number)})</p>
+  ${capabilities.length ? `<p>${p.capabilitiesLabel}: ${capabilities.map(escapeHtml).join(", ")}</p>` : ""}
+  <p>${p.addFriendInstruction(formatNumber(profile.number))}</p>
   <p><a href="/a/${profile.number}/agent-card.json">agent-card.json</a></p>
 </body></html>`);
 });

@@ -7,6 +7,7 @@ import { updateProfile, getAccountByUserId, whoami } from "../domain/account.js"
 import { createIdentity, loginWithTotp } from "../domain/identity.js";
 import { formatNumber } from "../domain/numbers.js";
 import { DomainError } from "../domain/errors.js";
+import { pickLocale, t } from "../i18n/index.js";
 
 const SESSION_COOKIE = "session";
 
@@ -30,19 +31,26 @@ function escapeHtml(input: string): string {
 // replaces, so the user must save this before continuing. Nickname, number,
 // and secret are all minted together (see domain/identity.ts), so the QR
 // already carries the real number — one scan is enough.
-async function totpSecretPage(number: bigint, secret: string, otpauthUrl: string, next: string | undefined): Promise<string> {
+async function totpSecretPage(
+  msg: ReturnType<typeof t>,
+  number: bigint,
+  secret: string,
+  otpauthUrl: string,
+  next: string | undefined,
+): Promise<string> {
+  const p = msg.pages.secretPage;
   const continueHref = escapeHtml(next ?? "/me");
   const qrDataUrl = await QRCode.toDataURL(otpauthUrl, { margin: 1, width: 240 });
-  return `<!doctype html><html><head><meta charset="utf-8"><title>weid.ai — Authenticator key</title></head>
+  return `<!doctype html><html><head><meta charset="utf-8"><title>${p.title}</title></head>
 <body>
-  <h1>Your Weid number is ${formatNumber(number)}</h1>
-  <p>Scan this with Google Authenticator, Authy, or a similar app:</p>
-  <p><img src="${qrDataUrl}" width="240" height="240" alt="Scan to add to your authenticator app"></p>
-  <p>If your app can't scan, enter this key manually instead:</p>
+  <h1>${escapeHtml(p.heading(formatNumber(number)))}</h1>
+  <p>${p.scanInstructions}</p>
+  <p><img src="${qrDataUrl}" width="240" height="240" alt="${p.scanInstructions}"></p>
+  <p>${p.manualFallback}</p>
   <p><code style="font-size:1.2em">${escapeHtml(secret)}</code></p>
-  <p><strong>Save this now. Losing this key means losing access to this account — there is no recovery.</strong></p>
-  <p>Once added, your app will show a rotating 6-digit code. Use that code to log in.</p>
-  <a href="${continueHref}">I've saved it, continue →</a>
+  <p><strong>${p.saveWarning}</strong></p>
+  <p>${p.afterAdded}</p>
+  <a href="${continueHref}">${p.continueLink}</a>
 </body></html>`;
 }
 
@@ -68,9 +76,8 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
 
   function requireSession(req: FastifyRequest, reply: FastifyReply): string | null {
     if (!req.userId) {
-      reply.code(401).send({
-        error: "还没登录，请先用号码+验证码登录，或在 Claude/ChatGPT 里添加 https://mcp.weid.ai 连接器完成注册 / Not logged in — log in with your number + code, or add https://mcp.weid.ai as a connector in Claude/ChatGPT to register",
-      });
+      const msg = t(pickLocale(req.headers["accept-language"]));
+      reply.code(401).send({ error: msg.pages.sessionRequired });
       return null;
     }
     return req.userId;
@@ -108,46 +115,59 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
       if (account) return reply.redirect("/me");
     }
 
-    reply.type("text/html").send(`<!doctype html><html><head><meta charset="utf-8"><title>weid.ai</title></head>
+    const msg = t(pickLocale(req.headers["accept-language"]));
+    const p = msg.pages.authRoot;
+    reply.type("text/html").send(`<!doctype html><html><head><meta charset="utf-8"><title>${p.title}</title></head>
 <body>
-  <h1>weid.ai</h1>
-  <p>This site is only used through the Claude / ChatGPT connector — there's no standalone login here.</p>
-  <p>Add <code>https://mcp.weid.ai</code> as a custom connector in Claude / ChatGPT and follow the prompts to register or log in.</p>
+  <h1>${p.heading}</h1>
+  <h2>${p.noNumberHeading}</h2>
+  <p>${p.noNumberBody}</p>
+  <h2>${p.haveNumberHeading}</h2>
+  <form method="post" action="/auth/identity/login">
+    <input type="text" name="number" required placeholder="${escapeHtml(p.numberPlaceholder)}">
+    <input type="text" name="code" required inputmode="numeric" pattern="[0-9]{6}" placeholder="${escapeHtml(p.codePlaceholder)}">
+    <button type="submit">${p.loginButton}</button>
+  </form>
 </body></html>`);
   });
 
   // Creates a brand new identity, claims a Weid number, and generates a TOTP
   // secret, all in one step — only reachable through the OAuth connector
   // flow's chooser form (see routes/oauth.ts), which is where the nickname
-  // field lives.
+  // field lives. Locale is detected here (real Accept-Language header on
+  // this registration request) and stuck to the identity for every future
+  // MCP tool call — see domain/identity.ts.
   app.post("/auth/identity/new", async (req, reply) => {
+    const locale = pickLocale(req.headers["accept-language"]);
+    const msg = t(locale);
     const schema = z.object({ nickname: z.string().min(1).max(30), next: z.string().optional() });
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) {
-      return reply.code(400).send({ error: "昵称不能为空 / nickname is required" });
+      return reply.code(400).send({ error: msg.errors.nicknameRequired });
     }
 
     let identity: Awaited<ReturnType<typeof createIdentity>>;
     try {
-      identity = await createIdentity(db, sessionSecret, parsed.data.nickname);
+      identity = await createIdentity(db, sessionSecret, parsed.data.nickname, locale);
     } catch (err) {
       if (err instanceof DomainError) {
-        return reply.code(400).send({ error: err.message });
+        return reply.code(400).send({ error: err.render(msg.errors) });
       }
       throw err;
     }
     setSessionCookie(reply, identity.userId);
 
     const next = isSafeNext(parsed.data.next) ? parsed.data.next : undefined;
-    return reply.type("text/html").send(await totpSecretPage(identity.number, identity.secret, identity.otpauthUrl, next));
+    return reply.type("text/html").send(await totpSecretPage(msg, identity.number, identity.secret, identity.otpauthUrl, next));
   });
 
   // Logs back in with the Weid number + the current authenticator-app code.
   app.post("/auth/identity/login", async (req, reply) => {
+    const msg = t(pickLocale(req.headers["accept-language"]));
     const schema = z.object({ number: z.string().min(1), code: z.string().min(1), next: z.string().optional() });
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) {
-      return reply.code(400).send({ error: "号码和验证码不能为空 / number and code are required" });
+      return reply.code(400).send({ error: msg.errors.loginIncorrect });
     }
 
     let userId: string;
@@ -155,7 +175,7 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
       userId = await loginWithTotp(db, sessionSecret, parsed.data.number, parsed.data.code);
     } catch (err) {
       if (err instanceof DomainError) {
-        return reply.code(400).send({ error: err.message });
+        return reply.code(400).send({ error: err.render(msg.errors) });
       }
       throw err;
     }
@@ -175,7 +195,8 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
 
     const info = await whoami(db, userId);
     if (!info) {
-      return reply.code(404).send({ error: "账号数据异常，请重新登录 / account data inconsistent, please log in again" });
+      const msg = t(pickLocale(req.headers["accept-language"]));
+      return reply.code(404).send({ error: msg.pages.accountDataInconsistentShort });
     }
     return info;
   });
@@ -184,9 +205,11 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
     const userId = requireSession(req, reply);
     if (!userId) return;
 
+    const msg = t(pickLocale(req.headers["accept-language"]));
+
     const account = await getAccountByUserId(db, userId);
     if (!account) {
-      return reply.code(404).send({ error: "账号数据异常，请重新登录 / account data inconsistent, please log in again" });
+      return reply.code(404).send({ error: msg.pages.accountDataInconsistentShort });
     }
 
     const schema = z.object({
@@ -200,14 +223,14 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
     });
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) {
-      return reply.code(400).send({ error: "参数不对 / invalid input", details: parsed.error.flatten() });
+      return reply.code(400).send({ error: "Invalid input", details: parsed.error.flatten() });
     }
 
     try {
       await updateProfile(db, account.number, parsed.data);
     } catch (err) {
       if (err instanceof DomainError) {
-        return reply.code(400).send({ error: err.message });
+        return reply.code(400).send({ error: err.render(msg.errors) });
       }
       throw err;
     }
