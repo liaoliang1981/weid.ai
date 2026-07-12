@@ -205,6 +205,16 @@ export async function oauthRoutes(app: FastifyInstance, opts: OAuthRouteOptions)
       return reply.code(401).send({ error: "login_required" });
     }
 
+    // Clear the browser's auth.weid.ai session as soon as this connector
+    // authorization is decided, approve or deny. Otherwise the same session
+    // gets silently reused by the NEXT connector authorized from this
+    // browser (standard OAuth SSO behavior) — fine if intentional, but
+    // there was no way to opt out short of the "switch account" link above.
+    // Clearing it here means every new connector always starts from the
+    // register/login chooser, and re-linking the same Weid number to a
+    // second client is just one more number+code login, not automatic.
+    reply.clearCookie("session", { path: "/" });
+
     const url = new URL(redirect_uri);
     if (action === "deny") {
       url.searchParams.set("error", "access_denied");
