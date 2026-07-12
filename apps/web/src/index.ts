@@ -14,14 +14,26 @@ app.get("/healthz", async () => {
 
 app.get("/", async (req, reply) => {
   const p = t(pickLocale(req.headers["accept-language"])).landing;
-  reply.type("text/html").send(
-    `<!doctype html><html><head><meta charset="utf-8"><title>${p.title}</title></head>` +
-      `<body><h1>${p.heading}</h1>` +
-      `<p>${p.tagline}</p>` +
-      `<p>${p.connectorOnlyNotice}</p>` +
-      `<p>${p.addConnectorInstruction}</p>` +
-      "</body></html>",
-  );
+  reply.type("text/html").send(`<!doctype html><html><head><meta charset="utf-8"><title>${p.title}</title></head>
+<body>
+  <h1>${p.heading}</h1>
+  <p><strong>${p.vision}</strong></p>
+
+  <h2>${p.whatItIsHeading}</h2>
+  <p>${p.whatItIsBody}</p>
+
+  <h2>${p.identityHeading}</h2>
+  <p>${p.identityBody}</p>
+
+  <h2>${p.communicationHeading}</h2>
+  <p>${p.communicationBody}</p>
+
+  <h2>${p.statusHeading}</h2>
+  <p>${p.statusBody}</p>
+
+  <h2>${p.gettingStartedHeading}</h2>
+  <p>${p.gettingStartedBody}</p>
+</body></html>`);
 });
 
 function notFoundPage(reply: import("fastify").FastifyReply, req: import("fastify").FastifyRequest) {
