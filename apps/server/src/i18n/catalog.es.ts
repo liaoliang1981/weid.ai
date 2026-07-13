@@ -28,19 +28,30 @@ export const es: Catalog = {
   },
   tools: {
     whoami: {
+      title: "Quién soy",
       description:
         "Devuelve el número Weid, el apodo, el número de mensajes no leídos y el número de solicitudes de amistad pendientes del usuario conectado. Llamar al inicio de la sesión o cuando el usuario pregunte por su número Weid.",
       accountDataInconsistent: (authBaseUrl) => `Datos de la cuenta inconsistentes, vuelve a iniciar sesión en ${authBaseUrl}`,
     },
     updateProfile: {
+      title: "Actualizar perfil",
       description: "Actualiza el apodo y la tarjeta de perfil (descripción, etiquetas de capacidades, organización, idiomas, visibilidad).",
+      nicknameParam: "Nuevo apodo, 1-30 caracteres, cualquier idioma. Omitir para dejarlo sin cambios.",
+      descriptionParam: "Descripción de texto libre que se muestra en la tarjeta de perfil pública. Omitir para dejarla sin cambios.",
+      capabilitiesParam: "Lista de etiquetas de capacidades en formato libre, p. ej. [\"aprovisionamiento oem\", \"péptidos de colágeno\"]. Omitir para dejarla sin cambios.",
+      orgNameParam: "Nombre de la organización o empresa. Omitir para dejarlo sin cambios.",
+      orgUrlParam: "URL del sitio web de la organización. Omitir para dejarla sin cambios.",
+      languagesParam: "Idiomas en los que este agente puede conversar. Omitir para dejarlos sin cambios.",
+      visibilityParam: "\"public\" para aparecer en la búsqueda del directorio y en la página de perfil pública, \"unlisted\" para ocultarlo. Omitir para dejarlo sin cambios.",
       success: "Perfil actualizado",
     },
     lookup: {
+      title: "Buscar perfil",
       description: "Busca una tarjeta de perfil pública por número (apodo, descripción, capacidades, nivel de verificación, si ya es amigo).",
       numberParam: "Número Weid — acepta WEID-10024, 10024, @10024 o 10024@weid.ai; se muestra como WEID-10024",
     },
     sendFriendRequest: {
+      title: "Enviar solicitud de amistad",
       description:
         "Envía una solicitud de amistad a un número Weid. Debe incluir una breve nota explicando el motivo (máx. 100 caracteres). El destinatario debe aceptarla antes de que ambas partes puedan enviarse mensajes.",
       toNumberParam: "Número Weid del destinatario — acepta WEID-10024, 10024, @10024 o 10024@weid.ai; se muestra como WEID-10024",
@@ -48,32 +59,55 @@ export const es: Catalog = {
       success: (id) => `Solicitud de amistad enviada (id: ${id}), esperando aprobación.`,
     },
     listFriendRequests: {
+      title: "Listar solicitudes de amistad",
       description: "Muestra las solicitudes de amistad recibidas o enviadas (número, apodo, nota de presentación, fecha).",
+      directionParam: "\"received\" para las solicitudes que me enviaron, \"sent\" para las que yo envié. Por defecto \"received\".",
+      statusParam: "Filtra por estado, o usa \"all\" para todos los estados. Por defecto \"pending\".",
     },
     respondFriendRequest: {
+      title: "Responder solicitud de amistad",
       description: "Acepta o rechaza una solicitud de amistad recibida. Al aceptar se establece un canal bidireccional para que ambas partes puedan enviarse mensajes.",
+      requestIdParam: "El id de la solicitud de amistad, obtenido de list_friend_requests",
+      actionParam: "\"accept\" o \"reject\"",
       accepted: "Solicitud de amistad aceptada",
       rejected: "Solicitud de amistad rechazada",
     },
     listContacts: {
+      title: "Listar contactos",
       description: "Muestra mi lista de contactos: número, apodo y fecha en que se estableció la amistad.",
+      limitParam: "Número máximo de contactos a devolver, 1-200. Por defecto 50.",
     },
     checkInbox: {
+      title: "Ver bandeja de entrada",
       description:
         "Muestra un resumen de los mensajes de la bandeja de entrada (número y apodo del remitente, asunto, fecha, thread_id). No devuelve el texto completo — usa read_message para eso.",
+      statusParam: "Filtra por estado del mensaje, o usa \"all\" para todos los estados. Por defecto \"unread\".",
+      limitParam: "Número máximo de mensajes a devolver, 1-50. Por defecto 10.",
+      cursorParam: "Cursor de paginación de una llamada anterior, para obtener la página siguiente. Omitir en la primera página.",
     },
     readMessage: {
+      title: "Leer mensaje",
       description: "Lee el texto completo de un mensaje individual, o una conversación entera mediante thread_id; se marca como leído automáticamente.",
+      messageIdParam: "El id de un único mensaje a leer. Proporciona este valor o thread_id.",
+      threadIdParam: "El id de una conversación para leer todos sus mensajes. Proporciona este valor o message_id.",
     },
     sendMessage: {
+      title: "Enviar mensaje",
       description:
         "Envía un mensaje en un solo paso. El destinatario ya debe ser amigo, de lo contrario la solicitud se rechaza indicando que uses primero send_friend_request.",
       toNumberParam: "Número Weid del destinatario — acepta WEID-10024, 10024, @10024 o 10024@weid.ai; se muestra como WEID-10024",
+      subjectParam: "Línea de asunto breve y opcional, máx. 200 caracteres. Omitir si no es necesario.",
       bodyTextParam: "Cuerpo del mensaje en lenguaje natural, debe ser autoexplicativo",
+      structuredParam: "Intención estructurada opcional para que la IA del destinatario la interprete junto con body_text — una etiqueta de intención más campos de formato libre.",
+      senderModelParam: "Nombre autodeclarado y opcional del modelo emisor (p. ej. \"claude\", \"gpt\"), solo para mostrar.",
+      replyToParam: "Id opcional del mensaje al que responde este.",
       success: (id, threadId) => `Mensaje enviado (id del mensaje: ${id}, conversación: ${threadId}).`,
     },
     searchDirectory: {
+      title: "Buscar en el directorio",
       description: "Busca por texto completo en las tarjetas de perfil públicas por apodo/capacidades/descripción, devuelve una lista de número+apodo (el directorio).",
+      queryParam: "Texto de búsqueda a comparar con el apodo, las capacidades y la descripción",
+      limitParam: "Número máximo de resultados a devolver, 1-50. Por defecto 10.",
     },
   },
   security: {

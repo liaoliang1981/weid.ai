@@ -46,8 +46,10 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
   server.registerTool(
     "whoami",
     {
+      title: msg.tools.whoami.title,
       description: msg.tools.whoami.description,
       inputSchema: {},
+      annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
     async () => {
       const info = await whoami(db, userId);
@@ -61,16 +63,18 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
   server.registerTool(
     "update_profile",
     {
+      title: msg.tools.updateProfile.title,
       description: msg.tools.updateProfile.description,
       inputSchema: {
-        nickname: z.string().min(1).max(30).optional(),
-        description: z.string().max(2000).optional(),
-        capabilities: z.array(z.string().max(50)).max(20).optional(),
-        org_name: z.string().max(200).optional(),
-        org_url: z.string().url().optional(),
-        languages: z.array(z.string().max(10)).max(10).optional(),
-        visibility: z.enum(["public", "unlisted"]).optional(),
+        nickname: z.string().min(1).max(30).optional().describe(msg.tools.updateProfile.nicknameParam),
+        description: z.string().max(2000).optional().describe(msg.tools.updateProfile.descriptionParam),
+        capabilities: z.array(z.string().max(50)).max(20).optional().describe(msg.tools.updateProfile.capabilitiesParam),
+        org_name: z.string().max(200).optional().describe(msg.tools.updateProfile.orgNameParam),
+        org_url: z.string().url().optional().describe(msg.tools.updateProfile.orgUrlParam),
+        languages: z.array(z.string().max(10)).max(10).optional().describe(msg.tools.updateProfile.languagesParam),
+        visibility: z.enum(["public", "unlisted"]).optional().describe(msg.tools.updateProfile.visibilityParam),
       },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
     async ({ nickname, description, capabilities, org_name, org_url, languages, visibility }) =>
       guarded(
@@ -94,10 +98,12 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
   server.registerTool(
     "lookup",
     {
+      title: msg.tools.lookup.title,
       description: msg.tools.lookup.description,
       inputSchema: {
         number: z.string().describe(msg.tools.lookup.numberParam),
       },
+      annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
     async ({ number }) =>
       guarded(
@@ -113,11 +119,13 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
   server.registerTool(
     "send_friend_request",
     {
+      title: msg.tools.sendFriendRequest.title,
       description: msg.tools.sendFriendRequest.description,
       inputSchema: {
         to_number: z.string().describe(msg.tools.sendFriendRequest.toNumberParam),
         intro: z.string().min(1).max(100).describe(msg.tools.sendFriendRequest.introParam),
       },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
     },
     async ({ to_number, intro }) =>
       guarded(
@@ -133,11 +141,13 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
   server.registerTool(
     "list_friend_requests",
     {
+      title: msg.tools.listFriendRequests.title,
       description: msg.tools.listFriendRequests.description,
       inputSchema: {
-        direction: z.enum(["received", "sent"]).default("received"),
-        status: z.enum(["pending", "accepted", "rejected", "expired", "all"]).default("pending"),
+        direction: z.enum(["received", "sent"]).default("received").describe(msg.tools.listFriendRequests.directionParam),
+        status: z.enum(["pending", "accepted", "rejected", "expired", "all"]).default("pending").describe(msg.tools.listFriendRequests.statusParam),
       },
+      annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
     async ({ direction, status }) =>
       guarded(
@@ -154,11 +164,13 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
   server.registerTool(
     "respond_friend_request",
     {
+      title: msg.tools.respondFriendRequest.title,
       description: msg.tools.respondFriendRequest.description,
       inputSchema: {
-        request_id: z.string().min(1),
-        action: z.enum(["accept", "reject"]),
+        request_id: z.string().min(1).describe(msg.tools.respondFriendRequest.requestIdParam),
+        action: z.enum(["accept", "reject"]).describe(msg.tools.respondFriendRequest.actionParam),
       },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
     },
     async ({ request_id, action }) =>
       guarded(
@@ -174,10 +186,12 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
   server.registerTool(
     "list_contacts",
     {
+      title: msg.tools.listContacts.title,
       description: msg.tools.listContacts.description,
       inputSchema: {
-        limit: z.number().int().min(1).max(200).default(50),
+        limit: z.number().int().min(1).max(200).default(50).describe(msg.tools.listContacts.limitParam),
       },
+      annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
     async ({ limit }) =>
       guarded(
@@ -193,12 +207,14 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
   server.registerTool(
     "check_inbox",
     {
+      title: msg.tools.checkInbox.title,
       description: msg.tools.checkInbox.description,
       inputSchema: {
-        status: z.enum(["unread", "read", "archived", "all"]).default("unread"),
-        limit: z.number().int().min(1).max(50).default(10),
-        cursor: z.string().optional(),
+        status: z.enum(["unread", "read", "archived", "all"]).default("unread").describe(msg.tools.checkInbox.statusParam),
+        limit: z.number().int().min(1).max(50).default(10).describe(msg.tools.checkInbox.limitParam),
+        cursor: z.string().optional().describe(msg.tools.checkInbox.cursorParam),
       },
+      annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
     async ({ status, limit, cursor }) =>
       guarded(
@@ -214,11 +230,13 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
   server.registerTool(
     "read_message",
     {
+      title: msg.tools.readMessage.title,
       description: msg.tools.readMessage.description,
       inputSchema: {
-        message_id: z.string().optional(),
-        thread_id: z.string().optional(),
+        message_id: z.string().optional().describe(msg.tools.readMessage.messageIdParam),
+        thread_id: z.string().optional().describe(msg.tools.readMessage.threadIdParam),
       },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
     async ({ message_id, thread_id }) =>
       guarded(
@@ -234,20 +252,23 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
   server.registerTool(
     "send_message",
     {
+      title: msg.tools.sendMessage.title,
       description: msg.tools.sendMessage.description,
       inputSchema: {
         to_number: z.string().describe(msg.tools.sendMessage.toNumberParam),
-        subject: z.string().max(200).optional(),
+        subject: z.string().max(200).optional().describe(msg.tools.sendMessage.subjectParam),
         body_text: z.string().min(1).describe(msg.tools.sendMessage.bodyTextParam),
         structured: z
           .object({
             intent: z.enum(["inquiry", "reply", "intro", "task", "other"]),
             fields: z.record(z.string(), z.unknown()).optional(),
           })
-          .optional(),
-        sender_model: z.string().optional(),
-        reply_to: z.string().optional(),
+          .optional()
+          .describe(msg.tools.sendMessage.structuredParam),
+        sender_model: z.string().optional().describe(msg.tools.sendMessage.senderModelParam),
+        reply_to: z.string().optional().describe(msg.tools.sendMessage.replyToParam),
       },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
     },
     async ({ to_number, subject, body_text, structured, sender_model, reply_to }) =>
       guarded(
@@ -263,11 +284,13 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
   server.registerTool(
     "search_directory",
     {
+      title: msg.tools.searchDirectory.title,
       description: msg.tools.searchDirectory.description,
       inputSchema: {
-        query: z.string().min(1),
-        limit: z.number().int().min(1).max(50).default(10),
+        query: z.string().min(1).describe(msg.tools.searchDirectory.queryParam),
+        limit: z.number().int().min(1).max(50).default(10).describe(msg.tools.searchDirectory.limitParam),
       },
+      annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
     async ({ query, limit }) =>
       guarded(

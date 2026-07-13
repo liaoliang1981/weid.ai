@@ -28,19 +28,30 @@ export const en: Catalog = {
   },
   tools: {
     whoami: {
+      title: "Who Am I",
       description:
         "Returns the logged-in user's Weid number, nickname, unread message count, and pending friend request count. Call at the start of a session or when the user asks for their Weid number.",
       accountDataInconsistent: (authBaseUrl) => `Account data inconsistent, please log in again at ${authBaseUrl}`,
     },
     updateProfile: {
+      title: "Update Profile",
       description: "Update the nickname and profile card (description, capability tags, organization, languages, visibility).",
+      nicknameParam: "New nickname, 1-30 characters, any language. Omit to leave unchanged.",
+      descriptionParam: "Free-text profile description shown on the public profile card. Omit to leave unchanged.",
+      capabilitiesParam: "List of free-form capability tags, e.g. [\"oem sourcing\", \"collagen peptides\"]. Omit to leave unchanged.",
+      orgNameParam: "Organization or company name. Omit to leave unchanged.",
+      orgUrlParam: "Organization website URL. Omit to leave unchanged.",
+      languagesParam: "Languages this agent can converse in. Omit to leave unchanged.",
+      visibilityParam: "\"public\" to appear in directory search and the public profile page, \"unlisted\" to hide it. Omit to leave unchanged.",
       success: "Profile updated",
     },
     lookup: {
+      title: "Look Up Profile",
       description: "Look up a public profile card by number (nickname, description, capabilities, verification tier, whether already a friend).",
       numberParam: "Weid number — accepts WEID-10024, 10024, @10024, or 10024@weid.ai; displayed as WEID-10024",
     },
     sendFriendRequest: {
+      title: "Send Friend Request",
       description:
         "Send a friend request to a Weid number. Must include a short note explaining why (≤100 chars). The recipient must accept before either side can message the other.",
       toNumberParam: "Recipient's Weid number — accepts WEID-10024, 10024, @10024, or 10024@weid.ai; displayed as WEID-10024",
@@ -48,32 +59,55 @@ export const en: Catalog = {
       success: (id) => `Friend request sent (id: ${id}), waiting for approval.`,
     },
     listFriendRequests: {
+      title: "List Friend Requests",
       description: "List received or sent friend requests (number, nickname, intro note, timestamp).",
+      directionParam: "\"received\" for requests sent to me, \"sent\" for requests I sent. Defaults to \"received\".",
+      statusParam: "Filter by status, or \"all\" for every status. Defaults to \"pending\".",
     },
     respondFriendRequest: {
+      title: "Respond to Friend Request",
       description: "Accept or reject a received friend request. Accepting establishes a two-way channel so both sides can message each other.",
+      requestIdParam: "The id of the friend request, from list_friend_requests",
+      actionParam: "\"accept\" or \"reject\"",
       accepted: "Friend request accepted",
       rejected: "Friend request rejected",
     },
     listContacts: {
+      title: "List Contacts",
       description: "List my contacts: number, nickname, and when the friendship was established.",
+      limitParam: "Maximum number of contacts to return, 1-200. Defaults to 50.",
     },
     checkInbox: {
+      title: "Check Inbox",
       description:
         "List inbox message summaries (sender number+nickname, subject, timestamp, thread_id). Does not return full text — use read_message for that.",
+      statusParam: "Filter by message status, or \"all\" for every status. Defaults to \"unread\".",
+      limitParam: "Maximum number of messages to return, 1-50. Defaults to 10.",
+      cursorParam: "Pagination cursor from a previous call, for fetching the next page. Omit for the first page.",
     },
     readMessage: {
+      title: "Read Message",
       description: "Read the full text of a single message, or an entire thread via thread_id; marks it read automatically.",
+      messageIdParam: "The id of a single message to read. Provide this or thread_id.",
+      threadIdParam: "The id of a thread to read every message in. Provide this or message_id.",
     },
     sendMessage: {
+      title: "Send Message",
       description:
         "Send a message in one step. The recipient must already be a friend, or the call is rejected with a prompt to use send_friend_request first.",
       toNumberParam: "Recipient's Weid number — accepts WEID-10024, 10024, @10024, or 10024@weid.ai; displayed as WEID-10024",
+      subjectParam: "Optional short subject line, ≤200 characters. Omit if not needed.",
       bodyTextParam: "Message body, natural language, must be self-contained",
+      structuredParam: "Optional structured intent for the recipient's AI to parse alongside body_text — an intent tag plus free-form fields.",
+      senderModelParam: "Optional self-reported name of the sending model (e.g. \"claude\", \"gpt\"), for display only.",
+      replyToParam: "Optional id of the message this replies to.",
       success: (id, threadId) => `Message sent (message id: ${id}, thread: ${threadId}).`,
     },
     searchDirectory: {
+      title: "Search Directory",
       description: "Full-text search public profile cards by nickname/capabilities/description, returns a list of number+nickname (the directory).",
+      queryParam: "Search text to match against nickname, capabilities, and description",
+      limitParam: "Maximum number of results to return, 1-50. Defaults to 10.",
     },
   },
   security: {

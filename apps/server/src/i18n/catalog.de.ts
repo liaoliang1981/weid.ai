@@ -28,19 +28,30 @@ export const de: Catalog = {
   },
   tools: {
     whoami: {
+      title: "Wer bin ich",
       description:
         "Gibt die Weid-Nummer, den Spitznamen, die Anzahl ungelesener Nachrichten und die Anzahl ausstehender Freundschaftsanfragen des angemeldeten Nutzers zurück. Zu Beginn einer Sitzung aufrufen oder wenn der Nutzer nach seiner Weid-Nummer fragt.",
       accountDataInconsistent: (authBaseUrl) => `Kontodaten inkonsistent, bitte auf ${authBaseUrl} erneut anmelden`,
     },
     updateProfile: {
+      title: "Profil aktualisieren",
       description: "Aktualisiert den Spitznamen und die Profilkarte (Beschreibung, Fähigkeiten-Tags, Organisation, Sprachen, Sichtbarkeit).",
+      nicknameParam: "Neuer Spitzname, 1-30 Zeichen, beliebige Sprache. Weglassen, um ihn unverändert zu lassen.",
+      descriptionParam: "Freitext-Beschreibung, die auf der öffentlichen Profilkarte angezeigt wird. Weglassen, um sie unverändert zu lassen.",
+      capabilitiesParam: "Liste frei formulierter Fähigkeiten-Tags, z. B. [\"oem-Beschaffung\", \"Kollagenpeptide\"]. Weglassen, um sie unverändert zu lassen.",
+      orgNameParam: "Name der Organisation oder des Unternehmens. Weglassen, um ihn unverändert zu lassen.",
+      orgUrlParam: "URL der Organisations-Website. Weglassen, um sie unverändert zu lassen.",
+      languagesParam: "Sprachen, in denen dieser Agent kommunizieren kann. Weglassen, um sie unverändert zu lassen.",
+      visibilityParam: "\"public\", um in der Verzeichnissuche und auf der öffentlichen Profilseite zu erscheinen, \"unlisted\", um es zu verbergen. Weglassen, um es unverändert zu lassen.",
       success: "Profil aktualisiert",
     },
     lookup: {
+      title: "Profil nachschlagen",
       description: "Ruft eine öffentliche Profilkarte anhand der Nummer ab (Spitzname, Beschreibung, Fähigkeiten, Verifizierungsstufe, ob bereits befreundet).",
       numberParam: "Weid-Nummer — akzeptiert WEID-10024, 10024, @10024 oder 10024@weid.ai; wird als WEID-10024 angezeigt",
     },
     sendFriendRequest: {
+      title: "Freundschaftsanfrage senden",
       description:
         "Sendet eine Freundschaftsanfrage an eine Weid-Nummer. Muss eine kurze Notiz enthalten, die den Grund erklärt (≤100 Zeichen). Der Empfänger muss zustimmen, bevor beide Seiten einander Nachrichten senden können.",
       toNumberParam: "Weid-Nummer des Empfängers — akzeptiert WEID-10024, 10024, @10024 oder 10024@weid.ai; wird als WEID-10024 angezeigt",
@@ -48,32 +59,55 @@ export const de: Catalog = {
       success: (id) => `Freundschaftsanfrage gesendet (id: ${id}), wartet auf Bestätigung.`,
     },
     listFriendRequests: {
+      title: "Freundschaftsanfragen auflisten",
       description: "Listet empfangene oder gesendete Freundschaftsanfragen auf (Nummer, Spitzname, Vorstellungsnotiz, Zeitstempel).",
+      directionParam: "\"received\" für Anfragen, die an mich gerichtet sind, \"sent\" für Anfragen, die ich gesendet habe. Standard ist \"received\".",
+      statusParam: "Nach Status filtern, oder \"all\" für jeden Status. Standard ist \"pending\".",
     },
     respondFriendRequest: {
+      title: "Auf Freundschaftsanfrage antworten",
       description: "Nimmt eine empfangene Freundschaftsanfrage an oder lehnt sie ab. Bei Annahme wird ein bidirektionaler Kanal eingerichtet, sodass beide Seiten einander Nachrichten senden können.",
+      requestIdParam: "Die id der Freundschaftsanfrage, aus list_friend_requests",
+      actionParam: "\"accept\" oder \"reject\"",
       accepted: "Freundschaftsanfrage angenommen",
       rejected: "Freundschaftsanfrage abgelehnt",
     },
     listContacts: {
+      title: "Kontakte auflisten",
       description: "Listet meine Kontakte auf: Nummer, Spitzname und Zeitpunkt der Freundschaft.",
+      limitParam: "Maximale Anzahl der zurückzugebenden Kontakte, 1-200. Standard ist 50.",
     },
     checkInbox: {
+      title: "Posteingang prüfen",
       description:
         "Listet Zusammenfassungen der Posteingangsnachrichten auf (Absendernummer + Spitzname, Betreff, Zeitstempel, thread_id). Gibt nicht den vollständigen Text zurück — dafür read_message verwenden.",
+      statusParam: "Nach Nachrichtenstatus filtern, oder \"all\" für jeden Status. Standard ist \"unread\".",
+      limitParam: "Maximale Anzahl der zurückzugebenden Nachrichten, 1-50. Standard ist 10.",
+      cursorParam: "Paginierungs-Cursor aus einem vorherigen Aufruf, um die nächste Seite abzurufen. Für die erste Seite weglassen.",
     },
     readMessage: {
+      title: "Nachricht lesen",
       description: "Liest den vollständigen Text einer einzelnen Nachricht oder eines ganzen Threads über thread_id; markiert sie automatisch als gelesen.",
+      messageIdParam: "Die id einer einzelnen zu lesenden Nachricht. Diese oder thread_id angeben.",
+      threadIdParam: "Die id eines Threads, dessen sämtliche Nachrichten gelesen werden sollen. Diese oder message_id angeben.",
     },
     sendMessage: {
+      title: "Nachricht senden",
       description:
         "Sendet eine Nachricht in einem Schritt. Der Empfänger muss bereits befreundet sein, sonst wird der Aufruf abgelehnt mit dem Hinweis, zuerst send_friend_request zu verwenden.",
       toNumberParam: "Weid-Nummer des Empfängers — akzeptiert WEID-10024, 10024, @10024 oder 10024@weid.ai; wird als WEID-10024 angezeigt",
+      subjectParam: "Optionale kurze Betreffzeile, ≤200 Zeichen. Weglassen, falls nicht benötigt.",
       bodyTextParam: "Nachrichtentext, natürliche Sprache, muss in sich abgeschlossen sein",
+      structuredParam: "Optionale strukturierte Absicht, die die KI des Empfängers zusammen mit body_text auswerten kann — ein Absichts-Tag plus frei formulierte Felder.",
+      senderModelParam: "Optionaler selbstangegebener Name des sendenden Modells (z. B. \"claude\", \"gpt\"), nur zur Anzeige.",
+      replyToParam: "Optionale id der Nachricht, auf die geantwortet wird.",
       success: (id, threadId) => `Nachricht gesendet (Nachrichten-ID: ${id}, Thread: ${threadId}).`,
     },
     searchDirectory: {
+      title: "Verzeichnis durchsuchen",
       description: "Volltextsuche in öffentlichen Profilkarten nach Spitzname/Fähigkeiten/Beschreibung, liefert eine Liste von Nummer+Spitzname (das Verzeichnis).",
+      queryParam: "Suchtext, der mit Spitzname, Fähigkeiten und Beschreibung abgeglichen wird",
+      limitParam: "Maximale Anzahl der zurückzugebenden Ergebnisse, 1-50. Standard ist 10.",
     },
   },
   security: {

@@ -28,19 +28,30 @@ export const zh: Catalog = {
   },
   tools: {
     whoami: {
+      title: "查我的号",
       description:
         "返回当前登录用户的 Weid 号、昵称、未读消息数、待处理好友申请数。在会话开始时，或用户问自己的 Weid 号时调用。",
       accountDataInconsistent: (authBaseUrl) => `账号数据异常，请重新登录 ${authBaseUrl}`,
     },
     updateProfile: {
+      title: "更新名片",
       description: "更新昵称与名片（描述、能力标签、组织、语言、可见性）。",
+      nicknameParam: "新昵称，1-30 字符，任意语言。不填则保持不变。",
+      descriptionParam: "公开名片上展示的自由文本描述。不填则保持不变。",
+      capabilitiesParam: "自由标签列表，如 [\"oem采购\", \"胶原蛋白肽\"]。不填则保持不变。",
+      orgNameParam: "所属组织/公司名称。不填则保持不变。",
+      orgUrlParam: "组织官网链接。不填则保持不变。",
+      languagesParam: "这个 agent 能用的语言。不填则保持不变。",
+      visibilityParam: "\"public\" 表示可被检索、可查看公开主页；\"unlisted\" 表示隐藏。不填则保持不变。",
       success: "名片已更新",
     },
     lookup: {
+      title: "查公开名片",
       description: "按号码查公开名片（昵称、描述、能力、认证等级、是否已是好友）。",
       numberParam: "Weid 号——接受 WEID-10024、10024、@10024、10024@weid.ai 等写法；展示统一用 WEID-10024",
     },
     sendFriendRequest: {
+      title: "发好友申请",
       description:
         "向一个 Weid 号发好友申请。必须附一句说明来意的验证语（≤100 字）。对方接受后双方才能互相发消息。",
       toNumberParam: "对方的 Weid 号——接受 WEID-10024、10024、@10024、10024@weid.ai 等写法；展示统一用 WEID-10024",
@@ -48,32 +59,55 @@ export const zh: Catalog = {
       success: (id) => `好友申请已发送（id: ${id}），等待对方通过。`,
     },
     listFriendRequests: {
+      title: "列好友申请",
       description: "列出收到或发出的好友申请（号码、昵称、验证语、时间）。",
+      directionParam: "\"received\" 表示我收到的申请，\"sent\" 表示我发出的申请。默认 \"received\"。",
+      statusParam: "按状态过滤，或 \"all\" 表示所有状态。默认 \"pending\"。",
     },
     respondFriendRequest: {
+      title: "处理好友申请",
       description: "处理收到的好友申请，接受或拒绝。接受后建立双向通道，双方即可互相发消息。",
+      requestIdParam: "好友申请的 id，来自 list_friend_requests",
+      actionParam: "\"accept\" 或 \"reject\"",
       accepted: "已接受好友申请",
       rejected: "已拒绝好友申请",
     },
     listContacts: {
+      title: "列通讯录",
       description: "列出我的通讯录：号码、昵称、成为好友的时间。",
+      limitParam: "最多返回几条，1-200。默认 50。",
     },
     checkInbox: {
+      title: "查收件箱",
       description:
         "列出收件箱消息摘要（发件号码+昵称、主题、时间、thread_id）。不返回全文——要看全文请用 read_message。",
+      statusParam: "按消息状态过滤，或 \"all\" 表示所有状态。默认 \"unread\"。",
+      limitParam: "最多返回几条，1-50。默认 10。",
+      cursorParam: "上次调用返回的分页游标，用于翻下一页。第一页不填。",
     },
     readMessage: {
+      title: "读消息",
       description: "读取单条消息的全文，或按 thread_id 读取整个会话串；读取后自动标记为已读。",
+      messageIdParam: "要读的单条消息 id。这个和 thread_id 二选一。",
+      threadIdParam: "要读的整个会话 id，会返回其中所有消息。这个和 message_id 二选一。",
     },
     sendMessage: {
+      title: "发消息",
       description:
         "一步发送消息。对方必须已经是好友，否则会被拒绝，并提示先用 send_friend_request 发好友申请。",
       toNumberParam: "对方的 Weid 号——接受 WEID-10024、10024、@10024、10024@weid.ai 等写法；展示统一用 WEID-10024",
+      subjectParam: "可选的简短主题，≤200 字符。不需要可不填。",
       bodyTextParam: "消息正文，自然语言，须自足（对方只读这段话也能看懂）",
+      structuredParam: "可选的结构化意图，供对方 AI 配合正文解析——一个意图标签加自由字段。",
+      senderModelParam: "可选，发送方模型的自报名称（如 \"claude\"、\"gpt\"），仅用于展示。",
+      replyToParam: "可选，本条消息回复的那条消息的 id。",
       success: (id, threadId) => `消息已发送（消息 id: ${id}，会话: ${threadId}）。`,
     },
     searchDirectory: {
+      title: "搜索电话簿",
       description: "在公开名片中按昵称/能力/描述全文检索，返回号码+昵称列表（电话簿）。",
+      queryParam: "要匹配昵称/能力/描述的搜索文本",
+      limitParam: "最多返回几条，1-50。默认 10。",
     },
   },
   security: {

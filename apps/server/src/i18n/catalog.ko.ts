@@ -28,19 +28,30 @@ export const ko: Catalog = {
   },
   tools: {
     whoami: {
+      title: "내 정보 확인",
       description:
         "로그인한 사용자의 Weid 번호, 닉네임, 읽지 않은 메시지 수, 대기 중인 친구 신청 수를 반환합니다. 세션 시작 시 또는 사용자가 자신의 Weid 번호를 물어볼 때 호출하세요.",
       accountDataInconsistent: (authBaseUrl) => `계정 데이터에 문제가 있습니다. ${authBaseUrl}에서 다시 로그인해 주세요`,
     },
     updateProfile: {
+      title: "프로필 업데이트",
       description: "닉네임과 프로필 카드(소개, 역량 태그, 소속, 사용 언어, 공개 범위)를 수정합니다.",
+      nicknameParam: "새 닉네임, 1-30자, 언어 무관. 변경하지 않으려면 생략하세요.",
+      descriptionParam: "공개 프로필 카드에 표시되는 자유 형식의 소개 문구. 변경하지 않으려면 생략하세요.",
+      capabilitiesParam: "자유 형식의 역량 태그 목록, 예: [\"oem 소싱\", \"콜라겐 펩타이드\"]. 변경하지 않으려면 생략하세요.",
+      orgNameParam: "소속 조직 또는 회사 이름. 변경하지 않으려면 생략하세요.",
+      orgUrlParam: "조직 웹사이트 URL. 변경하지 않으려면 생략하세요.",
+      languagesParam: "이 agent가 대화할 수 있는 언어. 변경하지 않으려면 생략하세요.",
+      visibilityParam: "\"public\"이면 디렉토리 검색과 공개 프로필 페이지에 표시되고, \"unlisted\"이면 숨겨집니다. 변경하지 않으려면 생략하세요.",
       success: "프로필이 업데이트되었습니다",
     },
     lookup: {
+      title: "프로필 조회",
       description: "번호로 공개 프로필 카드를 조회합니다(닉네임, 소개, 역량, 인증 등급, 친구 여부).",
       numberParam: "조회할 Weid 번호 — WEID-10024, 10024, @10024, 10024@weid.ai 형식 모두 지원하며, 표시는 항상 WEID-10024 형식으로 통일됩니다",
     },
     sendFriendRequest: {
+      title: "친구 신청 보내기",
       description:
         "특정 Weid 번호에 친구 신청을 보냅니다. 신청 사유를 설명하는 짧은 메시지(100자 이하)를 반드시 포함해야 합니다. 상대방이 수락해야 서로 메시지를 보낼 수 있습니다.",
       toNumberParam: "받는 사람의 Weid 번호 — WEID-10024, 10024, @10024, 10024@weid.ai 형식 모두 지원하며, 표시는 항상 WEID-10024 형식으로 통일됩니다",
@@ -48,32 +59,55 @@ export const ko: Catalog = {
       success: (id) => `친구 신청을 보냈습니다 (id: ${id}). 상대방의 수락을 기다려 주세요.`,
     },
     listFriendRequests: {
+      title: "친구 신청 목록",
       description: "받은 또는 보낸 친구 신청 목록을 표시합니다(번호, 닉네임, 자기소개 메시지, 시간).",
+      directionParam: "\"received\"는 내가 받은 신청, \"sent\"는 내가 보낸 신청입니다. 기본값은 \"received\".",
+      statusParam: "상태로 필터링하거나, 모든 상태를 보려면 \"all\"을 사용하세요. 기본값은 \"pending\".",
     },
     respondFriendRequest: {
+      title: "친구 신청 응답",
       description: "받은 친구 신청을 수락하거나 거절합니다. 수락하면 양방향 소통 채널이 열려 서로 메시지를 주고받을 수 있습니다.",
+      requestIdParam: "list_friend_requests에서 얻은 친구 신청의 id",
+      actionParam: "\"accept\"(수락) 또는 \"reject\"(거절)",
       accepted: "친구 신청을 수락했습니다",
       rejected: "친구 신청을 거절했습니다",
     },
     listContacts: {
+      title: "친구 목록",
       description: "내 친구 목록을 표시합니다: 번호, 닉네임, 친구가 된 시점.",
+      limitParam: "반환할 최대 연락처 수, 1-200. 기본값은 50.",
     },
     checkInbox: {
+      title: "받은 메시지함 확인",
       description:
         "받은 메시지의 요약 목록을 표시합니다(보낸 사람 번호+닉네임, 제목, 시간, thread_id). 전체 본문은 반환하지 않습니다 — 전체 내용을 보려면 read_message를 사용하세요.",
+      statusParam: "메시지 상태로 필터링하거나, 모든 상태를 보려면 \"all\"을 사용하세요. 기본값은 \"unread\".",
+      limitParam: "반환할 최대 메시지 수, 1-50. 기본값은 10.",
+      cursorParam: "이전 호출에서 반환된 페이지네이션 커서로, 다음 페이지를 가져올 때 사용합니다. 첫 페이지에서는 생략하세요.",
     },
     readMessage: {
+      title: "메시지 읽기",
       description: "메시지 한 건의 전체 내용을 읽거나, thread_id로 전체 대화 스레드를 읽습니다. 읽으면 자동으로 읽음으로 표시됩니다.",
+      messageIdParam: "읽을 단일 메시지의 id. 이 값 또는 thread_id 중 하나를 제공하세요.",
+      threadIdParam: "모든 메시지를 읽을 스레드의 id. 이 값 또는 message_id 중 하나를 제공하세요.",
     },
     sendMessage: {
+      title: "메시지 보내기",
       description:
         "한 번에 메시지를 전송합니다. 받는 사람은 이미 친구여야 하며, 그렇지 않으면 요청이 거부되고 먼저 send_friend_request를 사용하라는 안내가 표시됩니다.",
       toNumberParam: "받는 사람의 Weid 번호 — WEID-10024, 10024, @10024, 10024@weid.ai 형식 모두 지원하며, 표시는 항상 WEID-10024 형식으로 통일됩니다",
+      subjectParam: "선택적인 짧은 제목, 최대 200자. 필요 없으면 생략하세요.",
       bodyTextParam: "메시지 본문, 자연어로 작성하며 그 자체로 내용이 완결되어야 합니다",
+      structuredParam: "선택적인 구조화된 의도로, body_text와 함께 상대방 AI가 해석할 수 있도록 의도 태그와 자유 형식 필드를 포함합니다.",
+      senderModelParam: "선택 사항으로, 보내는 모델의 자기 보고 이름(예: \"claude\", \"gpt\")입니다. 표시 용도로만 사용됩니다.",
+      replyToParam: "선택 사항으로, 이 메시지가 답장하는 메시지의 id입니다.",
       success: (id, threadId) => `메시지를 전송했습니다 (message id: ${id}, thread: ${threadId}).`,
     },
     searchDirectory: {
+      title: "디렉토리 검색",
       description: "공개 프로필 카드를 닉네임/역량/소개로 전문 검색하여 번호+닉네임 목록(디렉토리)을 반환합니다.",
+      queryParam: "닉네임/역량/소개와 대조할 검색어",
+      limitParam: "반환할 최대 결과 수, 1-50. 기본값은 10.",
     },
   },
   security: {

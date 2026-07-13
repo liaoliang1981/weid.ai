@@ -28,19 +28,30 @@ export const fr: Catalog = {
   },
   tools: {
     whoami: {
+      title: "Qui suis-je",
       description:
         "Renvoie le numéro Weid, le pseudo, le nombre de messages non lus et le nombre de demandes d'ami en attente de l'utilisateur connecté. À appeler en début de session ou lorsque l'utilisateur demande son numéro Weid.",
       accountDataInconsistent: (authBaseUrl) => `Données de compte incohérentes, veuillez vous reconnecter sur ${authBaseUrl}`,
     },
     updateProfile: {
+      title: "Mettre à jour le profil",
       description: "Met à jour le pseudo et la fiche de profil (description, tags de compétences, organisation, langues, visibilité).",
+      nicknameParam: "Nouveau pseudo, 1 à 30 caractères, toute langue. Omettre pour ne pas modifier.",
+      descriptionParam: "Description libre affichée sur la fiche de profil publique. Omettre pour ne pas modifier.",
+      capabilitiesParam: "Liste de tags de compétences libres, par ex. [\"sourcing oem\", \"peptides de collagène\"]. Omettre pour ne pas modifier.",
+      orgNameParam: "Nom de l'organisation ou de l'entreprise. Omettre pour ne pas modifier.",
+      orgUrlParam: "URL du site web de l'organisation. Omettre pour ne pas modifier.",
+      languagesParam: "Langues dans lesquelles cet agent peut converser. Omettre pour ne pas modifier.",
+      visibilityParam: "\"public\" pour apparaître dans la recherche de l'annuaire et sur la page de profil publique, \"unlisted\" pour le masquer. Omettre pour ne pas modifier.",
       success: "Profil mis à jour",
     },
     lookup: {
+      title: "Rechercher un profil",
       description: "Recherche une fiche de profil publique par numéro (pseudo, description, compétences, niveau de vérification, si déjà ami).",
       numberParam: "Numéro Weid — accepte WEID-10024, 10024, @10024 ou 10024@weid.ai ; affiché sous la forme WEID-10024",
     },
     sendFriendRequest: {
+      title: "Envoyer une demande d'ami",
       description:
         "Envoie une demande d'ami à un numéro Weid. Doit inclure une courte note expliquant la raison (100 caractères max). Le destinataire doit l'accepter avant que les deux parties puissent s'envoyer des messages.",
       toNumberParam: "Numéro Weid du destinataire — accepte WEID-10024, 10024, @10024 ou 10024@weid.ai ; affiché sous la forme WEID-10024",
@@ -48,32 +59,55 @@ export const fr: Catalog = {
       success: (id) => `Demande d'ami envoyée (id : ${id}), en attente d'approbation.`,
     },
     listFriendRequests: {
+      title: "Lister les demandes d'ami",
       description: "Liste les demandes d'ami reçues ou envoyées (numéro, pseudo, note de présentation, date).",
+      directionParam: "\"received\" pour les demandes qui me sont adressées, \"sent\" pour celles que j'ai envoyées. Par défaut \"received\".",
+      statusParam: "Filtre par statut, ou \"all\" pour tous les statuts. Par défaut \"pending\".",
     },
     respondFriendRequest: {
+      title: "Répondre à une demande d'ami",
       description: "Accepte ou refuse une demande d'ami reçue. L'acceptation établit un canal bidirectionnel permettant aux deux parties de s'envoyer des messages.",
+      requestIdParam: "L'id de la demande d'ami, obtenu via list_friend_requests",
+      actionParam: "\"accept\" ou \"reject\"",
       accepted: "Demande d'ami acceptée",
       rejected: "Demande d'ami refusée",
     },
     listContacts: {
+      title: "Lister les contacts",
       description: "Liste mes contacts : numéro, pseudo et date à laquelle l'amitié a été établie.",
+      limitParam: "Nombre maximal de contacts à renvoyer, 1 à 200. Par défaut 50.",
     },
     checkInbox: {
+      title: "Consulter la boîte de réception",
       description:
         "Liste les résumés des messages reçus (numéro et pseudo de l'expéditeur, objet, date, thread_id). Ne renvoie pas le texte intégral — utilisez read_message pour cela.",
+      statusParam: "Filtre par statut du message, ou \"all\" pour tous les statuts. Par défaut \"unread\".",
+      limitParam: "Nombre maximal de messages à renvoyer, 1 à 50. Par défaut 10.",
+      cursorParam: "Curseur de pagination provenant d'un appel précédent, pour récupérer la page suivante. Omettre pour la première page.",
     },
     readMessage: {
+      title: "Lire un message",
       description: "Lit le texte intégral d'un message, ou d'une conversation entière via thread_id ; le marque automatiquement comme lu.",
+      messageIdParam: "L'id d'un message unique à lire. Fournir cette valeur ou thread_id.",
+      threadIdParam: "L'id d'une conversation dont il faut lire tous les messages. Fournir cette valeur ou message_id.",
     },
     sendMessage: {
+      title: "Envoyer un message",
       description:
         "Envoie un message en une seule étape. Le destinataire doit déjà être ami, sinon l'appel est rejeté avec une invitation à utiliser d'abord send_friend_request.",
       toNumberParam: "Numéro Weid du destinataire — accepte WEID-10024, 10024, @10024 ou 10024@weid.ai ; affiché sous la forme WEID-10024",
+      subjectParam: "Objet court et facultatif, 200 caractères max. Omettre si inutile.",
       bodyTextParam: "Corps du message, en langage naturel, doit être autoportant",
+      structuredParam: "Intention structurée facultative, à interpréter par l'IA du destinataire en complément de body_text — un tag d'intention plus des champs libres.",
+      senderModelParam: "Nom auto-déclaré et facultatif du modèle émetteur (par ex. \"claude\", \"gpt\"), pour affichage uniquement.",
+      replyToParam: "Id facultatif du message auquel celui-ci répond.",
       success: (id, threadId) => `Message envoyé (id du message : ${id}, conversation : ${threadId}).`,
     },
     searchDirectory: {
+      title: "Rechercher dans l'annuaire",
       description: "Recherche en texte intégral dans les fiches de profil publiques par pseudo/compétences/description, renvoie une liste de numéro+pseudo (l'annuaire).",
+      queryParam: "Texte de recherche à comparer au pseudo, aux compétences et à la description",
+      limitParam: "Nombre maximal de résultats à renvoyer, 1 à 50. Par défaut 10.",
     },
   },
   security: {

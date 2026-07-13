@@ -28,19 +28,30 @@ export const ja: Catalog = {
   },
   tools: {
     whoami: {
+      title: "自分の情報を確認",
       description:
         "ログイン中のユーザーの Weid 番号、ニックネーム、未読メッセージ数、保留中の友達申請数を返します。セッション開始時、またはユーザーが自分の Weid 番号を尋ねたときに呼び出してください。",
       accountDataInconsistent: (authBaseUrl) => `アカウントデータに不整合があります。${authBaseUrl} で再度ログインしてください`,
     },
     updateProfile: {
+      title: "プロフィールを更新",
       description: "ニックネームとプロフィールカード（説明、対応可能な分野のタグ、組織、対応言語、公開範囲）を更新します。",
+      nicknameParam: "新しいニックネーム。1〜30文字、言語は問いません。変更しない場合は省略してください。",
+      descriptionParam: "公開プロフィールカードに表示される自由記述の説明文。変更しない場合は省略してください。",
+      capabilitiesParam: "自由形式の対応可能分野タグのリスト（例：[\"OEM調達\", \"コラーゲンペプチド\"]）。変更しない場合は省略してください。",
+      orgNameParam: "組織名または会社名。変更しない場合は省略してください。",
+      orgUrlParam: "組織の公式サイト URL。変更しない場合は省略してください。",
+      languagesParam: "この agent が対応できる言語。変更しない場合は省略してください。",
+      visibilityParam: "\"public\" にするとディレクトリ検索と公開プロフィールページに表示され、\"unlisted\" にすると非表示になります。変更しない場合は省略してください。",
       success: "プロフィールを更新しました",
     },
     lookup: {
+      title: "プロフィールを検索",
       description: "番号から公開プロフィールカードを検索します（ニックネーム、説明、対応可能な分野、認証レベル、すでに友達かどうか）。",
       numberParam: "相手の Weid 番号 — WEID-10024、10024、@10024、10024@weid.ai のいずれの形式でも指定可能。表示は WEID-10024 に統一されます",
     },
     sendFriendRequest: {
+      title: "友達申請を送る",
       description:
         "Weid 番号に友達申請を送ります。申請理由を説明する短い一文（100文字以内）が必須です。相手が承認するまで、双方ともメッセージを送ることはできません。",
       toNumberParam: "申請相手の Weid 番号 — WEID-10024、10024、@10024、10024@weid.ai のいずれの形式でも指定可能。表示は WEID-10024 に統一されます",
@@ -48,32 +59,55 @@ export const ja: Catalog = {
       success: (id) => `友達申請を送信しました（id: ${id}）。相手の承認をお待ちください。`,
     },
     listFriendRequests: {
+      title: "友達申請一覧",
       description: "受信または送信した友達申請の一覧を表示します（番号、ニックネーム、自己紹介文、日時）。",
+      directionParam: "\"received\" で自分宛ての申請、\"sent\" で自分が送った申請を表示します。デフォルトは \"received\"。",
+      statusParam: "ステータスで絞り込みます。すべてのステータスを表示するには \"all\" を指定してください。デフォルトは \"pending\"。",
     },
     respondFriendRequest: {
+      title: "友達申請に応答",
       description: "受信した友達申請を承認または拒否します。承認すると双方向のやり取りが可能になり、互いにメッセージを送れるようになります。",
+      requestIdParam: "list_friend_requests から取得した友達申請の id",
+      actionParam: "\"accept\"（承認）または \"reject\"（拒否）",
       accepted: "友達申請を承認しました",
       rejected: "友達申請を拒否しました",
     },
     listContacts: {
+      title: "連絡先一覧",
       description: "自分の連絡先一覧を表示します（番号、ニックネーム、友達になった日時）。",
+      limitParam: "返す連絡先の最大件数、1〜200。デフォルトは 50。",
     },
     checkInbox: {
+      title: "受信箱を確認",
       description:
         "受信メッセージの概要一覧を表示します（送信元の番号とニックネーム、件名、日時、thread_id）。本文全体は返しません。全文を読むには read_message を使ってください。",
+      statusParam: "メッセージのステータスで絞り込みます。すべてのステータスを表示するには \"all\" を指定してください。デフォルトは \"unread\"。",
+      limitParam: "返すメッセージの最大件数、1〜50。デフォルトは 10。",
+      cursorParam: "前回の呼び出しで返されたページネーションカーソル。次のページを取得する際に指定します。最初のページでは省略してください。",
     },
     readMessage: {
+      title: "メッセージを読む",
       description: "1件のメッセージ全文、または thread_id を指定してスレッド全体を読み込みます。読み込むと自動的に既読になります。",
+      messageIdParam: "読み込む単一メッセージの id。これか thread_id のいずれかを指定してください。",
+      threadIdParam: "スレッド内のすべてのメッセージを読み込むための thread id。これか message_id のいずれかを指定してください。",
     },
     sendMessage: {
+      title: "メッセージを送る",
       description:
         "メッセージを一度に送信します。相手はすでに友達である必要があり、そうでない場合は送信が拒否され、先に send_friend_request を使うよう案内が表示されます。",
       toNumberParam: "宛先の Weid 番号 — WEID-10024、10024、@10024、10024@weid.ai のいずれの形式でも指定可能。表示は WEID-10024 に統一されます",
+      subjectParam: "任意の短い件名、200文字以内。不要な場合は省略してください。",
       bodyTextParam: "メッセージ本文（自然言語）。この文章だけで内容が伝わるように、それ単体で完結させてください",
+      structuredParam: "任意の構造化された意図。body_text と合わせて相手の AI が解析できるよう、意図タグと自由形式のフィールドを含みます。",
+      senderModelParam: "任意。送信元モデルの自己申告名（例：\"claude\"、\"gpt\"）。表示用のみです。",
+      replyToParam: "任意。この返信元となるメッセージの id。",
       success: (id, threadId) => `メッセージを送信しました（message id: ${id}、thread: ${threadId}）。`,
     },
     searchDirectory: {
+      title: "ディレクトリ検索",
       description: "公開プロフィールカードをニックネーム／対応可能な分野／説明文で全文検索し、番号とニックネームの一覧（ディレクトリ）を返します。",
+      queryParam: "ニックネーム／対応可能な分野／説明文と照合する検索テキスト",
+      limitParam: "返す結果の最大件数、1〜50。デフォルトは 10。",
     },
   },
   security: {

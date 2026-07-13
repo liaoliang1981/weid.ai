@@ -29,48 +29,82 @@ export interface Catalog {
   };
   tools: {
     whoami: {
+      title: string;
       description: string;
       accountDataInconsistent: (authBaseUrl: string) => string;
     };
     updateProfile: {
+      title: string;
       description: string;
+      nicknameParam: string;
+      descriptionParam: string;
+      capabilitiesParam: string;
+      orgNameParam: string;
+      orgUrlParam: string;
+      languagesParam: string;
+      visibilityParam: string;
       success: string;
     };
     lookup: {
+      title: string;
       description: string;
       numberParam: string;
     };
     sendFriendRequest: {
+      title: string;
       description: string;
       toNumberParam: string;
       introParam: string;
       success: (id: string) => string;
     };
     listFriendRequests: {
+      title: string;
       description: string;
+      directionParam: string;
+      statusParam: string;
     };
     respondFriendRequest: {
+      title: string;
       description: string;
+      requestIdParam: string;
+      actionParam: string;
       accepted: string;
       rejected: string;
     };
     listContacts: {
+      title: string;
       description: string;
+      limitParam: string;
     };
     checkInbox: {
+      title: string;
       description: string;
+      statusParam: string;
+      limitParam: string;
+      cursorParam: string;
     };
     readMessage: {
+      title: string;
       description: string;
+      messageIdParam: string;
+      threadIdParam: string;
     };
     sendMessage: {
+      title: string;
       description: string;
       toNumberParam: string;
+      subjectParam: string;
       bodyTextParam: string;
+      structuredParam: string;
+      senderModelParam: string;
+      replyToParam: string;
       success: (id: string, threadId: string) => string;
     };
     searchDirectory: {
+      title: string;
       description: string;
+      queryParam: string;
+      limitParam: string;
     };
   };
   security: {

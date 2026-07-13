@@ -28,19 +28,30 @@ export const pt: Catalog = {
   },
   tools: {
     whoami: {
+      title: "Quem sou eu",
       description:
         "Retorna o número Weid, o apelido, a contagem de mensagens não lidas e a contagem de solicitações de amizade pendentes do usuário conectado. Chame no início de uma sessão ou quando o usuário pedir o número Weid dele.",
       accountDataInconsistent: (authBaseUrl) => `Dados da conta inconsistentes, faça login novamente em ${authBaseUrl}`,
     },
     updateProfile: {
+      title: "Atualizar perfil",
       description: "Atualiza o apelido e o cartão de perfil (descrição, tags de capacidades, organização, idiomas, visibilidade).",
+      nicknameParam: "Novo apelido, 1-30 caracteres, qualquer idioma. Omitir para não alterar.",
+      descriptionParam: "Descrição em texto livre exibida no cartão de perfil público. Omitir para não alterar.",
+      capabilitiesParam: "Lista de tags de capacidades em formato livre, ex.: [\"sourcing oem\", \"peptídeos de colágeno\"]. Omitir para não alterar.",
+      orgNameParam: "Nome da organização ou empresa. Omitir para não alterar.",
+      orgUrlParam: "URL do site da organização. Omitir para não alterar.",
+      languagesParam: "Idiomas em que este agente pode conversar. Omitir para não alterar.",
+      visibilityParam: "\"public\" para aparecer na busca do diretório e na página de perfil público, \"unlisted\" para ocultá-lo. Omitir para não alterar.",
       success: "Perfil atualizado",
     },
     lookup: {
+      title: "Consultar perfil",
       description: "Consulta um cartão de perfil público por número (apelido, descrição, capacidades, nível de verificação, se já é amigo).",
       numberParam: "Número Weid — aceita WEID-10024, 10024, @10024 ou 10024@weid.ai; exibido como WEID-10024",
     },
     sendFriendRequest: {
+      title: "Enviar solicitação de amizade",
       description:
         "Envia uma solicitação de amizade para um número Weid. Deve incluir uma breve nota explicando o motivo (≤100 caracteres). O destinatário precisa aceitar antes que ambos os lados possam trocar mensagens.",
       toNumberParam: "Número Weid do destinatário — aceita WEID-10024, 10024, @10024 ou 10024@weid.ai; exibido como WEID-10024",
@@ -48,32 +59,55 @@ export const pt: Catalog = {
       success: (id) => `Solicitação de amizade enviada (id: ${id}), aguardando aprovação.`,
     },
     listFriendRequests: {
+      title: "Listar solicitações de amizade",
       description: "Lista solicitações de amizade recebidas ou enviadas (número, apelido, nota de apresentação, data/hora).",
+      directionParam: "\"received\" para solicitações recebidas por mim, \"sent\" para as que eu enviei. Padrão \"received\".",
+      statusParam: "Filtra por status, ou \"all\" para todos os status. Padrão \"pending\".",
     },
     respondFriendRequest: {
+      title: "Responder solicitação de amizade",
       description: "Aceita ou recusa uma solicitação de amizade recebida. Aceitar estabelece um canal bidirecional para que ambos os lados possam trocar mensagens.",
+      requestIdParam: "O id da solicitação de amizade, obtido em list_friend_requests",
+      actionParam: "\"accept\" ou \"reject\"",
       accepted: "Solicitação de amizade aceita",
       rejected: "Solicitação de amizade recusada",
     },
     listContacts: {
+      title: "Listar contatos",
       description: "Lista meus contatos: número, apelido e quando a amizade foi estabelecida.",
+      limitParam: "Número máximo de contatos a retornar, 1-200. Padrão 50.",
     },
     checkInbox: {
+      title: "Verificar caixa de entrada",
       description:
         "Lista resumos das mensagens da caixa de entrada (número e apelido do remetente, assunto, data/hora, thread_id). Não retorna o texto completo — use read_message para isso.",
+      statusParam: "Filtra por status da mensagem, ou \"all\" para todos os status. Padrão \"unread\".",
+      limitParam: "Número máximo de mensagens a retornar, 1-50. Padrão 10.",
+      cursorParam: "Cursor de paginação de uma chamada anterior, para buscar a próxima página. Omitir na primeira página.",
     },
     readMessage: {
+      title: "Ler mensagem",
       description: "Lê o texto completo de uma única mensagem, ou de uma conversa inteira via thread_id; marca-a como lida automaticamente.",
+      messageIdParam: "O id de uma única mensagem a ler. Forneça este valor ou thread_id.",
+      threadIdParam: "O id de uma conversa cujas mensagens devem ser lidas todas. Forneça este valor ou message_id.",
     },
     sendMessage: {
+      title: "Enviar mensagem",
       description:
         "Envia uma mensagem em uma única etapa. O destinatário já precisa ser amigo, caso contrário a chamada é rejeitada com uma indicação para usar send_friend_request primeiro.",
       toNumberParam: "Número Weid do destinatário — aceita WEID-10024, 10024, @10024 ou 10024@weid.ai; exibido como WEID-10024",
+      subjectParam: "Linha de assunto curta e opcional, ≤200 caracteres. Omitir se não for necessário.",
       bodyTextParam: "Corpo da mensagem, em linguagem natural, deve ser autossuficiente",
+      structuredParam: "Intenção estruturada opcional para a IA do destinatário interpretar junto com body_text — uma tag de intenção mais campos livres.",
+      senderModelParam: "Nome opcional autodeclarado do modelo remetente (ex.: \"claude\", \"gpt\"), apenas para exibição.",
+      replyToParam: "Id opcional da mensagem à qual esta responde.",
       success: (id, threadId) => `Mensagem enviada (id da mensagem: ${id}, conversa: ${threadId}).`,
     },
     searchDirectory: {
+      title: "Buscar no diretório",
       description: "Busca em texto completo nos cartões de perfil públicos por apelido/capacidades/descrição, retorna uma lista de número+apelido (o diretório).",
+      queryParam: "Texto de busca a ser comparado com apelido, capacidades e descrição",
+      limitParam: "Número máximo de resultados a retornar, 1-50. Padrão 10.",
     },
   },
   security: {
