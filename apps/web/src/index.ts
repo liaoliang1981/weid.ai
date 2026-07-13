@@ -128,6 +128,24 @@ const styles = `
     letter-spacing: 0.04em;
     margin: 0 0 0.5rem;
   }
+  .usage {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    margin-top: 2.5rem;
+  }
+  @media (max-width: 560px) {
+    .usage { grid-template-columns: 1fr; }
+  }
+  .usage h2 { margin-bottom: 0.75rem; }
+  .usage ol {
+    margin: 0;
+    padding-left: 1.25rem;
+    color: var(--text-dim);
+    font-size: 0.95rem;
+  }
+  .usage li { margin-bottom: 0.5rem; }
+  .usage li:last-child { margin-bottom: 0; }
 `;
 
 // A small hub-and-spoke network — the same motif used across weid.ai's
@@ -175,7 +193,17 @@ app.get("/", async (req, reply) => {
       `${heroGraphic}
   <h1>${p.heading}</h1>
   <p class="vision">${p.vision}</p>
-  <p class="intro">${p.intro}</p>`,
+  <p class="intro">${p.intro}</p>
+  <div class="usage">
+    <div class="card">
+      <h2>${p.claudeHeading}</h2>
+      <ol>${p.claudeSteps.map((step) => `<li>${step}</li>`).join("")}</ol>
+    </div>
+    <div class="card">
+      <h2>${p.chatgptHeading}</h2>
+      <ol>${p.chatgptSteps.map((step) => `<li>${step}</li>`).join("")}</ol>
+    </div>
+  </div>`,
     ),
   );
 });
