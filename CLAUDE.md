@@ -232,7 +232,7 @@ AUTH_URL=https://auth.weid.ai / SESSION_SECRET
 
 代码规范：ESLint + Prettier 默认；所有工具函数单元测试（vitest）；提交信息用英文 conventional commits；本文档中文撰写。
 
-**多语言**：网页和 MCP 工具的用户可见文案都做了多语言，支持中、英、日、韩、西、法、德、葡 8 种（`apps/server/src/i18n/catalog.<lang>.ts`，`Catalog` 接口是唯一真源，新增文案先改接口再补全 8 个语言文件）。识别方式分两条：
+**多语言**：网页和 MCP 工具的用户可见文案都做了多语言，支持中、英、日、韩、西、法、德、葡、泰 9 种（`apps/server/src/i18n/catalog.<lang>.ts`，`Catalog` 接口是唯一真源，新增文案先改接口再补全 9 个语言文件）。识别方式分两条：
 - **网页**（weid.ai、auth.weid.ai）：每次请求读浏览器 `Accept-Language` 头，实时选择语言，不做记忆。
 - **MCP 工具**：MCP 传输本身不一定带真实的终端用户语言信号，所以改为在**注册那一步**（`/auth/identity/new`，是真实的浏览器请求，有 `Accept-Language`）把语言写进 `users.locale`，此后这个账号所有工具调用、错误消息、`wrapUntrusted` 安全警告语都用这个存下来的语言渲染。
 - 识别不出的语言一律回退英文。

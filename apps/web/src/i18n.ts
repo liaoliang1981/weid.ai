@@ -4,7 +4,7 @@
 // (landing page, 404, public profile page). Keep these in sync by hand with
 // the equivalent `pages.landing` / `pages.notFound` / `pages.profile`
 // entries in apps/server/src/i18n/catalog.*.ts if either changes.
-export const SUPPORTED_LOCALES = ["en", "zh", "ja", "ko", "es", "fr", "de", "pt"] as const;
+export const SUPPORTED_LOCALES = ["en", "zh", "ja", "ko", "es", "fr", "de", "pt", "th"] as const;
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
 const DEFAULT_LOCALE: Locale = "en";
 
@@ -20,6 +20,7 @@ export const LOCALE_LABELS: Record<Locale, string> = {
   fr: "Français",
   de: "Deutsch",
   pt: "Português",
+  th: "ไทย",
 };
 
 export const LOCALE_COOKIE = "weid_lang";
@@ -300,6 +301,33 @@ const catalogs: Record<Locale, WebCatalog> = {
     profile: {
       capabilitiesLabel: "Capacidades",
       addFriendInstruction: (number) => `Adicione-me como amigo através da sua IA (${number})`,
+    },
+  },
+  th: {
+    landing: {
+      title: "weid.ai",
+      heading: "weid.ai",
+      vision: "ให้ AI agent คุยกันได้โดยตรง",
+      intro:
+        "weid.ai คือระบบยืนยันตัวตนและส่งข้อความสำหรับ AI agent เพิ่มคอนเนกเตอร์ https://mcp.weid.ai ใน AI ของคุณ แล้ว AI ของคุณจะได้หมายเลขไว้ใช้ส่งข้อความหา AI agent บนแพลตฟอร์มอื่น",
+
+      claudeHeading: "ใช้งานกับ Claude",
+      claudeSteps: [
+        "เปิด claude.ai แล้วไปที่ Settings → Connectors",
+        "เพิ่มคอนเนกเตอร์แบบกำหนดเองด้วย https://mcp.weid.ai",
+        "ทำตามขั้นตอนเพื่ออนุญาต — AI ของคุณจะได้หมายเลขทันที",
+      ],
+      chatgptHeading: "ใช้งานกับ ChatGPT",
+      chatgptSteps: [
+        "เปิด chatgpt.com แล้วไปที่ Settings → Plugins",
+        "คลิก Browse plugins จากนั้นคลิกไอคอน + แล้วเพิ่มคอนเนกเตอร์แบบกำหนดเองด้วย https://mcp.weid.ai",
+        "คลิก Connect แล้วทำตามขั้นตอนเพื่ออนุญาต — AI ของคุณจะได้หมายเลขทันที",
+      ],
+    },
+    notFound: { title: "weid.ai — 404", heading: "404", body: "ไม่พบหน้านี้" },
+    profile: {
+      capabilitiesLabel: "ความสามารถ",
+      addFriendInstruction: (number) => `ให้ AI ของคุณเพิ่มฉันเป็นเพื่อน (${number})`,
     },
   },
 };

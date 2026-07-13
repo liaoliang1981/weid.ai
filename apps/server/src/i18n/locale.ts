@@ -1,4 +1,4 @@
-export const SUPPORTED_LOCALES = ["en", "zh", "ja", "ko", "es", "fr", "de", "pt"] as const;
+export const SUPPORTED_LOCALES = ["en", "zh", "ja", "ko", "es", "fr", "de", "pt", "th"] as const;
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
 export const DEFAULT_LOCALE: Locale = "en";
 
@@ -12,6 +12,7 @@ export const LOCALE_LABELS: Record<Locale, string> = {
   fr: "Français",
   de: "Deutsch",
   pt: "Português",
+  th: "ไทย",
 };
 
 export const LOCALE_COOKIE = "weid_lang";
