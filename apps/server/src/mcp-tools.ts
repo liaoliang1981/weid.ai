@@ -14,17 +14,25 @@ import { lookup, searchDirectory } from "./domain/directory.js";
 import { wrapUntrusted } from "./domain/security.js";
 import { t, type Locale } from "./i18n/index.js";
 
-function ok(text: string) {
-  return { content: [{ type: "text" as const, text }] };
+function ok(text: string, structuredContent?: Record<string, unknown>) {
+  return structuredContent
+    ? { content: [{ type: "text" as const, text }], structuredContent }
+    : { content: [{ type: "text" as const, text }] };
 }
 
 function errorResult(message: string) {
   return { content: [{ type: "text" as const, text: message }], isError: true };
 }
 
-async function guarded<T>(locale: Locale, fn: () => Promise<T>, format: (value: T) => string) {
+async function guarded<T>(
+  locale: Locale,
+  fn: () => Promise<T>,
+  format: (value: T) => string,
+  toStructured?: (value: T) => Record<string, unknown>,
+) {
   try {
-    return ok(format(await fn()));
+    const value = await fn();
+    return ok(format(value), toStructured?.(value));
   } catch (err) {
     if (err instanceof DomainError) return errorResult(err.render(t(locale).errors));
     throw err;
@@ -43,12 +51,23 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
   const msg = t(locale);
   const server = new McpServer({ name: "weid-network", version: "0.1.0" });
 
+  // Registered as "get_my_info" (not "whoami") to match the verb_noun naming
+  // convention every other tool follows — the Catalog key stays `whoami`
+  // internally since only the outward MCP tool name matters here.
   server.registerTool(
-    "whoami",
+    "get_my_info",
     {
       title: msg.tools.whoami.title,
       description: msg.tools.whoami.description,
       inputSchema: {},
+      outputSchema: {
+        number: z.string(),
+        nickname: z.string(),
+        status: z.string(),
+        tier: z.string(),
+        unreadCount: z.number(),
+        pendingFriendRequestCount: z.number(),
+      },
       annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
     async () => {
@@ -56,7 +75,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
       if (!info) {
         return ok(msg.tools.whoami.accountDataInconsistent(authBaseUrl));
       }
-      return ok(JSON.stringify(info, null, 2));
+      return ok(JSON.stringify(info, null, 2), info as unknown as Record<string, unknown>);
     },
   );
 
@@ -74,6 +93,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         languages: z.array(z.string().max(10)).max(10).optional().describe(msg.tools.updateProfile.languagesParam),
         visibility: z.enum(["public", "unlisted"]).optional().describe(msg.tools.updateProfile.visibilityParam),
       },
+      outputSchema: { ok: z.boolean() },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
     async ({ nickname, description, capabilities, org_name, org_url, languages, visibility }) =>
@@ -92,6 +112,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
           });
         },
         () => msg.tools.updateProfile.success,
+        () => ({ ok: true }),
       ),
   );
 
@@ -103,6 +124,17 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
       inputSchema: {
         number: z.string().describe(msg.tools.lookup.numberParam),
       },
+      outputSchema: {
+        number: z.string(),
+        nickname: z.string(),
+        tier: z.string(),
+        description: z.string(),
+        capabilities: z.array(z.string()),
+        orgName: z.string(),
+        orgUrl: z.string(),
+        languages: z.array(z.string()),
+        isFriend: z.boolean(),
+      },
       annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
     async ({ number }) =>
@@ -113,6 +145,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
           return lookup(db, myNumber, number);
         },
         (result) => JSON.stringify(result, null, 2),
+        (result) => result,
       ),
   );
 
@@ -125,6 +158,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         to_number: z.string().describe(msg.tools.sendFriendRequest.toNumberParam),
         intro: z.string().min(1).max(100).describe(msg.tools.sendFriendRequest.introParam),
       },
+      outputSchema: { id: z.string() },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
     },
     async ({ to_number, intro }) =>
@@ -135,6 +169,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
           return sendFriendRequest(db, me.number, to_number, intro);
         },
         (id) => msg.tools.sendFriendRequest.success(id),
+        (id) => ({ id }),
       ),
   );
 
@@ -147,6 +182,18 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         direction: z.enum(["received", "sent"]).default("received").describe(msg.tools.listFriendRequests.directionParam),
         status: z.enum(["pending", "accepted", "rejected", "expired", "all"]).default("pending").describe(msg.tools.listFriendRequests.statusParam),
       },
+      outputSchema: {
+        requests: z.array(
+          z.object({
+            id: z.string(),
+            number: z.string(),
+            nickname: z.string(),
+            intro: z.string(),
+            status: z.string(),
+            createdAt: z.string(),
+          }),
+        ),
+      },
       annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
     async ({ direction, status }) =>
@@ -158,6 +205,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
           return rows.map((r) => ({ ...r, intro: wrapUntrusted(r.intro, locale) }));
         },
         (rows) => JSON.stringify(rows, null, 2),
+        (rows) => ({ requests: rows }),
       ),
   );
 
@@ -170,6 +218,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         request_id: z.string().min(1).describe(msg.tools.respondFriendRequest.requestIdParam),
         action: z.enum(["accept", "reject"]).describe(msg.tools.respondFriendRequest.actionParam),
       },
+      outputSchema: { ok: z.boolean() },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
     },
     async ({ request_id, action }) =>
@@ -180,6 +229,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
           await respondFriendRequest(db, myNumber, request_id, action);
         },
         () => (action === "accept" ? msg.tools.respondFriendRequest.accepted : msg.tools.respondFriendRequest.rejected),
+        () => ({ ok: true }),
       ),
   );
 
@@ -191,6 +241,9 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
       inputSchema: {
         limit: z.number().int().min(1).max(200).default(50).describe(msg.tools.listContacts.limitParam),
       },
+      outputSchema: {
+        contacts: z.array(z.object({ number: z.string(), nickname: z.string(), since: z.string() })),
+      },
       annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
     async ({ limit }) =>
@@ -201,6 +254,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
           return listContacts(db, myNumber, limit);
         },
         (rows) => JSON.stringify(rows, null, 2),
+        (rows) => ({ contacts: rows }),
       ),
   );
 
@@ -214,6 +268,19 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         limit: z.number().int().min(1).max(50).default(10).describe(msg.tools.checkInbox.limitParam),
         cursor: z.string().optional().describe(msg.tools.checkInbox.cursorParam),
       },
+      outputSchema: {
+        messages: z.array(
+          z.object({
+            id: z.string(),
+            threadId: z.string(),
+            from: z.string(),
+            fromNickname: z.string(),
+            subject: z.string(),
+            status: z.string(),
+            createdAt: z.string(),
+          }),
+        ),
+      },
       annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
     async ({ status, limit, cursor }) =>
@@ -224,6 +291,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
           return checkInbox(db, myNumber, locale, status, limit, cursor);
         },
         (rows) => JSON.stringify(rows, null, 2),
+        (rows) => ({ messages: rows }),
       ),
   );
 
@@ -236,6 +304,25 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         message_id: z.string().optional().describe(msg.tools.readMessage.messageIdParam),
         thread_id: z.string().optional().describe(msg.tools.readMessage.threadIdParam),
       },
+      outputSchema: {
+        messages: z.array(
+          z.object({
+            id: z.string(),
+            threadId: z.string(),
+            from: z.string(),
+            fromNickname: z.string().nullable(),
+            to: z.string(),
+            toNickname: z.string().nullable(),
+            direction: z.enum(["outgoing", "incoming"]),
+            subject: z.string(),
+            text: z.string(),
+            structured: z.object({ intent: z.string(), fields: z.record(z.string(), z.unknown()).optional() }).nullable(),
+            senderModel: z.string(),
+            status: z.string(),
+            createdAt: z.string(),
+          }),
+        ),
+      },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
     async ({ message_id, thread_id }) =>
@@ -246,6 +333,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
           return readMessage(db, myNumber, locale, { messageId: message_id, threadId: thread_id });
         },
         (rows) => JSON.stringify(rows, null, 2),
+        (rows) => ({ messages: rows }),
       ),
   );
 
@@ -268,6 +356,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         sender_model: z.string().optional().describe(msg.tools.sendMessage.senderModelParam),
         reply_to: z.string().optional().describe(msg.tools.sendMessage.replyToParam),
       },
+      outputSchema: { id: z.string(), threadId: z.string() },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
     },
     async ({ to_number, subject, body_text, structured, sender_model, reply_to }) =>
@@ -278,6 +367,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
           return sendMessage(db, me.number, to_number, subject, body_text, structured, sender_model, reply_to);
         },
         (result) => msg.tools.sendMessage.success(result.id, result.threadId),
+        (result) => result,
       ),
   );
 
@@ -290,6 +380,9 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         query: z.string().min(1).describe(msg.tools.searchDirectory.queryParam),
         limit: z.number().int().min(1).max(50).default(10).describe(msg.tools.searchDirectory.limitParam),
       },
+      outputSchema: {
+        results: z.array(z.object({ number: z.string(), nickname: z.string(), description: z.string() })),
+      },
       annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
     async ({ query, limit }) =>
@@ -300,6 +393,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
           return searchDirectory(db, query, limit);
         },
         (rows) => JSON.stringify(rows, null, 2),
+        (rows) => ({ results: rows }),
       ),
   );
 

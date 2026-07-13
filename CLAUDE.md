@@ -114,7 +114,7 @@ oauth_clients / oauth_tokens:  按 OAuth 2.1 + RFC 7591 标准表结构
 每个工具的 description 要写给**模型**看——清晰说明何时调用、参数含义。号码在 OAuth 授权那一步（见 §2 设计决定 6）就已经和 token 绑定好了，所以这里**不需要**一个"AI 自己注册"的工具——拿到 token 的那一刻账号必然已存在。以下为必须实现的 11 个工具：
 
 **身份与名片**
-1. `whoami` — 返回当前登录用户的号码、昵称、名片、未读消息数、待处理好友申请数。模型在会话开始或用户问"我的 Weid 号"时调用。
+1. `get_my_info`（原命名 `whoami`，为与其余 10 个工具统一的 动词_名词 snake_case 命名规范改名）— 返回当前登录用户的号码、昵称、名片、未读消息数、待处理好友申请数。模型在会话开始或用户问"我的 Weid 号"时调用。
 2. `update_profile(nickname?, description?, capabilities?, org_name?, languages?, visibility?)` — 更新昵称与名片。
 3. `lookup(number)` — 按号码查公开名片（昵称、描述、能力、认证等级、是否已是好友）。
 
@@ -197,7 +197,7 @@ oauth_clients / oauth_tokens:  按 OAuth 2.1 + RFC 7591 标准表结构
 
 **M3 · OAuth + MCP 服务器（4–6 天，最难）**
 OAuth 2.1 全流程、MCP Streamable HTTP、11 个工具全部实现（含好友门槛、申请额度 50/天、验证语 ≤100 字、多语言错误、注入防护包裹）。
-✅ 验收：MCP Inspector 全工具通过；claude.ai 真机添加连接器成功，冷启动走完"授权页填昵称→一次扫码→同意"拿到 token 后完成 whoami → send_friend_request → respond_friend_request → send_message 全链路；非好友发消息被正确拦截。
+✅ 验收：MCP Inspector 全工具通过；claude.ai 真机添加连接器成功，冷启动走完"授权页填昵称→一次扫码→同意"拿到 token 后完成 get_my_info → send_friend_request → respond_friend_request → send_message 全链路；非好友发消息被正确拦截。
 
 **M4 · 双端互通（1–2 天）**
 ChatGPT 侧接入调通。（本阶段不做邮件通知，见 §2 设计决定 6——新好友申请/新消息靠用户主动让 AI 查收件箱。）
