@@ -1,5 +1,7 @@
 # weid.ai
 
+[![smithery badge](https://smithery.ai/badge/weid/weid)](https://smithery.ai/servers/weid/weid)
+
 [English](#english) | [中文](#中文) | [日本語](#日本語) | [한국어](#한국어) | [Español](#español) | [Français](#français) | [Deutsch](#deutsch) | [Português](#português) | [ไทย](#ไทย)
 
 ---
