@@ -1,12 +1,30 @@
 import Fastify from "fastify";
+import cookie from "@fastify/cookie";
 import { createDb, accounts, agentCards } from "@weid/db";
 import { eq, and } from "drizzle-orm";
-import { pickLocale, t } from "./i18n.js";
+import type { FastifyReply, FastifyRequest } from "fastify";
+import { resolveLocale, t, SUPPORTED_LOCALES, LOCALE_LABELS, LOCALE_COOKIE, LOCALE_QUERY_PARAM, type Locale } from "./i18n.js";
 
 const app = Fastify({ logger: true });
 
 const databaseUrl = process.env.DATABASE_URL ?? "postgres://weid:weid@localhost:5432/weid";
 const db = createDb(databaseUrl);
+
+await app.register(cookie);
+
+// Resolves the locale for this request (query param > cookie > browser
+// Accept-Language > English) and, if the request carries an explicit
+// ?lang=, persists it to a cookie so the choice sticks across the site
+// without needing to keep passing ?lang= on every link.
+function resolveRequestLocale(req: FastifyRequest, reply: FastifyReply): Locale {
+  const queryLang = (req.query as Record<string, string | undefined>)?.[LOCALE_QUERY_PARAM];
+  const cookieLang = req.cookies?.[LOCALE_COOKIE];
+  const locale = resolveLocale({ queryLang, cookieLang, acceptLanguageHeader: req.headers["accept-language"] });
+  if (queryLang && queryLang === locale && queryLang !== cookieLang) {
+    reply.setCookie(LOCALE_COOKIE, locale, { path: "/", maxAge: 365 * 24 * 60 * 60, sameSite: "lax" });
+  }
+  return locale;
+}
 
 // Shared visual language for every page on this site — dark, a single blue
 // accent, no external fonts/CSS/JS (self-contained, no network requests
@@ -34,7 +52,28 @@ const styles = `
   .wrap {
     max-width: 720px;
     margin: 0 auto;
-    padding: 4rem 1.5rem 5rem;
+    padding: 1.5rem 1.5rem 5rem;
+  }
+  .lang-switcher {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem 0.6rem;
+    margin: 0 0 3rem;
+  }
+  .lang-switcher a {
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    text-decoration: none;
+    padding: 0.15rem 0.1rem;
+    border-bottom: 2px solid transparent;
+  }
+  .lang-switcher a:hover {
+    color: var(--text);
+  }
+  .lang-switcher a.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
   }
   .hero-graphic {
     display: block;
@@ -104,9 +143,21 @@ const heroGraphic = `<svg class="hero-graphic" viewBox="0 0 140 140" xmlns="http
   <circle cx="70" cy="105" r="12" fill="#63b3ed"/>
 </svg>`;
 
-function pageShell(title: string, body: string): string {
+// Plain links to ?lang=xx, not a <select>/JS toggle — works with zero
+// JavaScript, matching the rest of this site. `path` is the current
+// request's path (without query) so switching language doesn't lose which
+// page you're on (e.g. a profile page).
+function langSwitcher(path: string, current: Locale): string {
+  const items = SUPPORTED_LOCALES.map((loc) => {
+    const cls = loc === current ? ' class="active"' : "";
+    return `<a href="${path}?${LOCALE_QUERY_PARAM}=${loc}"${cls}>${LOCALE_LABELS[loc]}</a>`;
+  });
+  return `<nav class="lang-switcher">${items.join("")}</nav>`;
+}
+
+function pageShell(title: string, path: string, locale: Locale, body: string): string {
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title}</title><style>${styles}</style></head>
-<body><div class="wrap">${body}</div></body></html>`;
+<body><div class="wrap">${langSwitcher(path, locale)}${body}</div></body></html>`;
 }
 
 app.get("/healthz", async () => {
@@ -114,10 +165,13 @@ app.get("/healthz", async () => {
 });
 
 app.get("/", async (req, reply) => {
-  const p = t(pickLocale(req.headers["accept-language"])).landing;
+  const locale = resolveRequestLocale(req, reply);
+  const p = t(locale).landing;
   reply.type("text/html").send(
     pageShell(
       p.title,
+      "/",
+      locale,
       `${heroGraphic}
   <h1>${p.heading}</h1>
   <p class="vision">${p.vision}</p>
@@ -126,12 +180,13 @@ app.get("/", async (req, reply) => {
   );
 });
 
-function notFoundPage(reply: import("fastify").FastifyReply, req: import("fastify").FastifyRequest) {
-  const p = t(pickLocale(req.headers["accept-language"])).notFound;
+function notFoundPage(reply: FastifyReply, req: FastifyRequest) {
+  const locale = resolveRequestLocale(req, reply);
+  const p = t(locale).notFound;
   reply
     .code(404)
     .type("text/html")
-    .send(pageShell(p.title, `<h1>${p.heading}</h1><p class="intro">${p.body}</p>`));
+    .send(pageShell(p.title, req.url.split("?")[0], locale, `<h1>${p.heading}</h1><p class="intro">${p.body}</p>`));
 }
 
 async function loadPublicProfile(number: bigint) {
@@ -167,7 +222,8 @@ app.get<{ Params: { number: string } }>("/:number(^[0-9]+$)", async (req, reply)
     return notFoundPage(reply, req);
   }
 
-  const p = t(pickLocale(req.headers["accept-language"])).profile;
+  const locale = resolveRequestLocale(req, reply);
+  const p = t(locale).profile;
   const nickname = escapeHtml(profile.nickname);
   const description = profile.description ? escapeHtml(profile.description) : "";
   const capabilities = profile.capabilities as string[];
@@ -175,6 +231,8 @@ app.get<{ Params: { number: string } }>("/:number(^[0-9]+$)", async (req, reply)
   reply.type("text/html").send(
     pageShell(
       `${formatNumber(profile.number)} ${nickname} — weid.ai`,
+      `/${profile.number}`,
+      locale,
       `<h1>${formatNumber(profile.number)}</h1>
   <p class="vision">${nickname}</p>
   <div class="card">

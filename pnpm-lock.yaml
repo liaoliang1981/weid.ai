@@ -66,6 +66,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@fastify/cookie':
+        specifier: ^11.0.2
+        version: 11.0.2
       '@weid/db':
         specifier: workspace:*
         version: link:../../packages/db

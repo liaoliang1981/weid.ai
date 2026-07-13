@@ -9,7 +9,7 @@ import { de } from "./catalog.de.js";
 import { pt } from "./catalog.pt.js";
 import type { Locale } from "./locale.js";
 
-export { pickLocale, DEFAULT_LOCALE, SUPPORTED_LOCALES } from "./locale.js";
+export { pickLocale, resolveLocale, DEFAULT_LOCALE, SUPPORTED_LOCALES, LOCALE_LABELS, LOCALE_COOKIE, LOCALE_QUERY_PARAM } from "./locale.js";
 export type { Locale } from "./locale.js";
 export type { Catalog } from "./catalog.js";
 

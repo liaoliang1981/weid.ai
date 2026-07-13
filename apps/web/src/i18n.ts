@@ -8,12 +8,29 @@ export const SUPPORTED_LOCALES = ["en", "zh", "ja", "ko", "es", "fr", "de", "pt"
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
 const DEFAULT_LOCALE: Locale = "en";
 
+// Each language's own name for itself, for the switcher UI — not the
+// current page's language, so a French speaker who lands on the English
+// page can still recognize "Français" in the list.
+export const LOCALE_LABELS: Record<Locale, string> = {
+  en: "English",
+  zh: "中文",
+  ja: "日本語",
+  ko: "한국어",
+  es: "Español",
+  fr: "Français",
+  de: "Deutsch",
+  pt: "Português",
+};
+
+export const LOCALE_COOKIE = "weid_lang";
+export const LOCALE_QUERY_PARAM = "lang";
+
 function isSupported(tag: string): tag is Locale {
   return (SUPPORTED_LOCALES as readonly string[]).includes(tag);
 }
 
-export function pickLocale(acceptLanguageHeader: string | undefined | null): Locale {
-  if (!acceptLanguageHeader) return DEFAULT_LOCALE;
+function fromAcceptLanguage(acceptLanguageHeader: string | undefined | null): Locale | null {
+  if (!acceptLanguageHeader) return null;
   const candidates = acceptLanguageHeader
     .split(",")
     .map((part) => {
@@ -27,7 +44,26 @@ export function pickLocale(acceptLanguageHeader: string | undefined | null): Loc
     const primary = tag.split("-")[0];
     if (isSupported(primary)) return primary;
   }
-  return DEFAULT_LOCALE;
+  return null;
+}
+
+export function pickLocale(acceptLanguageHeader: string | undefined | null): Locale {
+  return fromAcceptLanguage(acceptLanguageHeader) ?? DEFAULT_LOCALE;
+}
+
+// Priority for the manual switcher: an explicit ?lang= on this request wins
+// (and gets persisted to a cookie by the caller), then a previously-set
+// cookie from an earlier visit, then the browser's Accept-Language, then
+// English. This is what lets someone override their browser's language
+// once and have it stick across the site.
+export function resolveLocale(opts: {
+  queryLang?: string | null;
+  cookieLang?: string | null;
+  acceptLanguageHeader?: string | null;
+}): Locale {
+  if (opts.queryLang && isSupported(opts.queryLang)) return opts.queryLang;
+  if (opts.cookieLang && isSupported(opts.cookieLang)) return opts.cookieLang;
+  return fromAcceptLanguage(opts.acceptLanguageHeader ?? undefined) ?? DEFAULT_LOCALE;
 }
 
 interface WebCatalog {

@@ -1,5 +1,5 @@
 import { randomBytes, createHash, timingSafeEqual } from "node:crypto";
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
 import { ulid } from "ulid";
 import { eq, and, isNull, gt } from "drizzle-orm";
@@ -7,7 +7,8 @@ import { oauthClients, oauthAuthorizationCodes, oauthTokens, type Db } from "@we
 import { getAccountByUserId } from "../domain/account.js";
 import { formatNumber } from "../domain/numbers.js";
 import { verifySessionToken } from "../session.js";
-import { pickLocale, t } from "../i18n/index.js";
+import { resolveLocale, t, LOCALE_COOKIE, LOCALE_QUERY_PARAM, type Locale } from "../i18n/index.js";
+import { pageShell } from "./page-shell.js";
 
 const AUTH_CODE_TTL_MS = 5 * 60 * 1000;
 const ACCESS_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -48,12 +49,14 @@ function hiddenFields(query: Record<string, string | undefined>): string {
     .join("\n    ");
 }
 
-function chooserPage(msg: ReturnType<typeof t>, next: string): string {
+function chooserPage(msg: ReturnType<typeof t>, locale: Locale, requestUrl: string, next: string): string {
   const p = msg.pages.chooser;
   const nextField = `<input type="hidden" name="next" value="${escapeHtml(next)}">`;
-  return `<!doctype html><html><head><meta charset="utf-8"><title>${p.title}</title></head>
-<body>
-  <h1>${p.heading}</h1>
+  return pageShell(
+    p.title,
+    requestUrl,
+    locale,
+    `<h1>${p.heading}</h1>
 
   <h2>${p.noNumberHeading}</h2>
   <form method="post" action="/auth/identity/new">
@@ -68,12 +71,14 @@ function chooserPage(msg: ReturnType<typeof t>, next: string): string {
     <input type="text" name="code" required inputmode="numeric" pattern="[0-9]{6}" placeholder="${escapeHtml(p.codePlaceholder)}">
     ${nextField}
     <button type="submit">${p.loginButton}</button>
-  </form>
-</body></html>`;
+  </form>`,
+  );
 }
 
 function consentPage(
   msg: ReturnType<typeof t>,
+  locale: Locale,
+  requestUrl: string,
   clientName: string,
   account: { number: bigint; nickname: string },
   query: z.infer<typeof AuthorizeQuery>,
@@ -88,17 +93,19 @@ function consentPage(
   // back into this same /authorize flow, which will then show the
   // register/login chooser instead of skipping straight to consent.
   const switchAccountHref = `/auth/logout?next=${encodeURIComponent(authorizeUrl)}`;
-  return `<!doctype html><html><head><meta charset="utf-8"><title>${p.title}</title></head>
-<body>
-  <h1>${p.heading}</h1>
+  return pageShell(
+    p.title,
+    requestUrl,
+    locale,
+    `<h1>${p.heading}</h1>
   <p>${identityLine}</p>
   <form method="post" action="/authorize/approve">
     ${hiddenFields(query)}
     <button type="submit" name="action" value="approve">${p.approveButton}</button>
     <button type="submit" name="action" value="deny">${p.denyButton}</button>
   </form>
-  <p><a href="${escapeHtml(switchAccountHref)}">${p.switchAccountLink}</a></p>
-</body></html>`;
+  <p><a href="${escapeHtml(switchAccountHref)}">${p.switchAccountLink}</a></p>`,
+  );
 }
 
 export interface OAuthRouteOptions {
@@ -110,6 +117,18 @@ export interface OAuthRouteOptions {
 
 export async function oauthRoutes(app: FastifyInstance, opts: OAuthRouteOptions) {
   const { db, sessionSecret, issuer, mcpUrl } = opts;
+
+  // Same query > cookie > Accept-Language > English priority as auth.ts —
+  // see that file for why the manual override needs to persist to a cookie.
+  function resolveRequestLocale(req: FastifyRequest, reply: FastifyReply): Locale {
+    const queryLang = (req.query as Record<string, string | undefined>)?.[LOCALE_QUERY_PARAM];
+    const cookieLang = req.cookies?.[LOCALE_COOKIE];
+    const locale = resolveLocale({ queryLang, cookieLang, acceptLanguageHeader: req.headers["accept-language"] });
+    if (queryLang && queryLang === locale && queryLang !== cookieLang) {
+      reply.setCookie(LOCALE_COOKIE, locale, { path: "/", maxAge: 365 * 24 * 60 * 60, sameSite: "lax" });
+    }
+    return locale;
+  }
 
   app.get("/.well-known/oauth-authorization-server", async () => ({
     issuer,
@@ -174,13 +193,14 @@ export async function oauthRoutes(app: FastifyInstance, opts: OAuthRouteOptions)
       return reply.code(400).send({ error: "invalid_client", error_description: "unknown client_id or redirect_uri" });
     }
 
-    const msg = t(pickLocale(req.headers["accept-language"]));
+    const locale = resolveRequestLocale(req, reply);
+    const msg = t(locale);
     const session = verifySessionToken(sessionSecret, req.cookies?.session);
     const queryString = new URLSearchParams(req.query as Record<string, string>).toString();
     const next = `/authorize?${queryString}`;
 
     if (!session) {
-      return reply.type("text/html").send(chooserPage(msg, next));
+      return reply.type("text/html").send(chooserPage(msg, locale, req.url, next));
     }
 
     const account = await getAccountByUserId(db, session.userId);
@@ -190,7 +210,7 @@ export async function oauthRoutes(app: FastifyInstance, opts: OAuthRouteOptions)
       // Only a leftover session from before that change could land here.
       return reply.code(409).send({ error: msg.pages.accountDataInconsistentShort + " — visit /auth/logout and try again" });
     }
-    return reply.type("text/html").send(consentPage(msg, client.clientName, account, parsed.data, next));
+    return reply.type("text/html").send(consentPage(msg, locale, req.url, client.clientName, account, parsed.data, next));
   });
 
   app.post("/authorize/approve", async (req, reply) => {

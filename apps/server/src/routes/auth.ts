@@ -7,7 +7,8 @@ import { updateProfile, getAccountByUserId, whoami } from "../domain/account.js"
 import { createIdentity, loginWithTotp } from "../domain/identity.js";
 import { formatNumber } from "../domain/numbers.js";
 import { DomainError } from "../domain/errors.js";
-import { pickLocale, t } from "../i18n/index.js";
+import { resolveLocale, t, LOCALE_COOKIE, LOCALE_QUERY_PARAM, type Locale } from "../i18n/index.js";
+import { pageShell } from "./page-shell.js";
 
 const SESSION_COOKIE = "session";
 
@@ -33,6 +34,7 @@ function escapeHtml(input: string): string {
 // already carries the real number — one scan is enough.
 async function totpSecretPage(
   msg: ReturnType<typeof t>,
+  locale: Locale,
   number: bigint,
   secret: string,
   otpauthUrl: string,
@@ -41,17 +43,19 @@ async function totpSecretPage(
   const p = msg.pages.secretPage;
   const continueHref = escapeHtml(next ?? "/me");
   const qrDataUrl = await QRCode.toDataURL(otpauthUrl, { margin: 1, width: 240 });
-  return `<!doctype html><html><head><meta charset="utf-8"><title>${p.title}</title></head>
-<body>
-  <h1>${escapeHtml(p.heading(formatNumber(number)))}</h1>
+  return pageShell(
+    p.title,
+    null,
+    locale,
+    `<h1>${escapeHtml(p.heading(formatNumber(number)))}</h1>
   <p>${p.scanInstructions}</p>
   <p><img src="${qrDataUrl}" width="240" height="240" alt="${p.scanInstructions}"></p>
   <p>${p.manualFallback}</p>
   <p><code style="font-size:1.2em">${escapeHtml(secret)}</code></p>
   <p><strong>${p.saveWarning}</strong></p>
   <p>${p.afterAdded}</p>
-  <a href="${continueHref}">${p.continueLink}</a>
-</body></html>`;
+  <a href="${continueHref}">${p.continueLink}</a>`,
+  );
 }
 
 declare module "fastify" {
@@ -74,9 +78,24 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
     if (payload) req.userId = payload.userId;
   });
 
+  // Resolves the locale for this request (query param > cookie > browser
+  // Accept-Language > English) and, if the request carries an explicit
+  // ?lang=, persists it to a cookie so the manual choice sticks across the
+  // site — including into domain/identity.ts's createIdentity, which stores
+  // whatever this resolves to as the account's permanent MCP-tool language.
+  function resolveRequestLocale(req: FastifyRequest, reply: FastifyReply): Locale {
+    const queryLang = (req.query as Record<string, string | undefined>)?.[LOCALE_QUERY_PARAM];
+    const cookieLang = req.cookies?.[LOCALE_COOKIE];
+    const locale = resolveLocale({ queryLang, cookieLang, acceptLanguageHeader: req.headers["accept-language"] });
+    if (queryLang && queryLang === locale && queryLang !== cookieLang) {
+      reply.setCookie(LOCALE_COOKIE, locale, { path: "/", maxAge: 365 * 24 * 60 * 60, sameSite: "lax" });
+    }
+    return locale;
+  }
+
   function requireSession(req: FastifyRequest, reply: FastifyReply): string | null {
     if (!req.userId) {
-      const msg = t(pickLocale(req.headers["accept-language"]));
+      const msg = t(resolveRequestLocale(req, reply));
       reply.code(401).send({ error: msg.pages.sessionRequired });
       return null;
     }
@@ -115,11 +134,15 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
       if (account) return reply.redirect("/me");
     }
 
-    const msg = t(pickLocale(req.headers["accept-language"]));
+    const locale = resolveRequestLocale(req, reply);
+    const msg = t(locale);
     const p = msg.pages.authRoot;
-    reply.type("text/html").send(`<!doctype html><html><head><meta charset="utf-8"><title>${p.title}</title></head>
-<body>
-  <h1>${p.heading}</h1>
+    reply.type("text/html").send(
+      pageShell(
+        p.title,
+        "/",
+        locale,
+        `<h1>${p.heading}</h1>
   <h2>${p.noNumberHeading}</h2>
   <p>${p.noNumberBody}</p>
   <h2>${p.haveNumberHeading}</h2>
@@ -127,8 +150,9 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
     <input type="text" name="number" required placeholder="${escapeHtml(p.numberPlaceholder)}">
     <input type="text" name="code" required inputmode="numeric" pattern="[0-9]{6}" placeholder="${escapeHtml(p.codePlaceholder)}">
     <button type="submit">${p.loginButton}</button>
-  </form>
-</body></html>`);
+  </form>`,
+      ),
+    );
   });
 
   // Creates a brand new identity, claims a Weid number, and generates a TOTP
@@ -138,7 +162,7 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
   // this registration request) and stuck to the identity for every future
   // MCP tool call — see domain/identity.ts.
   app.post("/auth/identity/new", async (req, reply) => {
-    const locale = pickLocale(req.headers["accept-language"]);
+    const locale = resolveRequestLocale(req, reply);
     const msg = t(locale);
     const schema = z.object({ nickname: z.string().min(1).max(30), next: z.string().optional() });
     const parsed = schema.safeParse(req.body);
@@ -158,12 +182,14 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
     setSessionCookie(reply, identity.userId);
 
     const next = isSafeNext(parsed.data.next) ? parsed.data.next : undefined;
-    return reply.type("text/html").send(await totpSecretPage(msg, identity.number, identity.secret, identity.otpauthUrl, next));
+    return reply
+      .type("text/html")
+      .send(await totpSecretPage(msg, locale, identity.number, identity.secret, identity.otpauthUrl, next));
   });
 
   // Logs back in with the Weid number + the current authenticator-app code.
   app.post("/auth/identity/login", async (req, reply) => {
-    const msg = t(pickLocale(req.headers["accept-language"]));
+    const msg = t(resolveRequestLocale(req, reply));
     const schema = z.object({ number: z.string().min(1), code: z.string().min(1), next: z.string().optional() });
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) {
@@ -195,7 +221,7 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
 
     const info = await whoami(db, userId);
     if (!info) {
-      const msg = t(pickLocale(req.headers["accept-language"]));
+      const msg = t(resolveRequestLocale(req, reply));
       return reply.code(404).send({ error: msg.pages.accountDataInconsistentShort });
     }
     return info;
@@ -205,7 +231,7 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
     const userId = requireSession(req, reply);
     if (!userId) return;
 
-    const msg = t(pickLocale(req.headers["accept-language"]));
+    const msg = t(resolveRequestLocale(req, reply));
 
     const account = await getAccountByUserId(db, userId);
     if (!account) {
