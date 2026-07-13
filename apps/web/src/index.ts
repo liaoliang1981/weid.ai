@@ -148,15 +148,17 @@ const styles = `
   .usage li:last-child { margin-bottom: 0; }
 `;
 
-// A pyramid-shaped wireframe — apex, two front base corners, and a back
-// vertex (the hub) that the front corners' edges converge toward, giving it
-// a 3D pyramid silhouette — as the one visual anchor on the page.
+// A 3D pyramid wireframe — the visible front face (apex + two base
+// corners) drawn solid, and the edges running back to the hidden rear
+// vertex (the hub) drawn dashed, the standard convention for showing depth
+// in a 2D line drawing — as the one visual anchor on the page.
 const heroGraphic = `<svg class="hero-graphic" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
   <line x1="70" y1="25" x2="30" y2="95" stroke="#3d5a80" stroke-width="4"/>
   <line x1="70" y1="25" x2="110" y2="95" stroke="#3d5a80" stroke-width="4"/>
-  <line x1="30" y1="95" x2="70" y2="115" stroke="#3d5a80" stroke-width="4"/>
-  <line x1="110" y1="95" x2="70" y2="115" stroke="#3d5a80" stroke-width="4"/>
-  <line x1="70" y1="25" x2="70" y2="115" stroke="#3d5a80" stroke-width="3"/>
+  <line x1="30" y1="95" x2="110" y2="95" stroke="#3d5a80" stroke-width="4"/>
+  <line x1="70" y1="25" x2="70" y2="115" stroke="#3d5a80" stroke-width="3" stroke-dasharray="4 4"/>
+  <line x1="30" y1="95" x2="70" y2="115" stroke="#3d5a80" stroke-width="3" stroke-dasharray="4 4"/>
+  <line x1="110" y1="95" x2="70" y2="115" stroke="#3d5a80" stroke-width="3" stroke-dasharray="4 4"/>
   <circle cx="70" cy="25" r="9" fill="#e6e9f5"/>
   <circle cx="30" cy="95" r="9" fill="#e6e9f5"/>
   <circle cx="110" cy="95" r="9" fill="#e6e9f5"/>
