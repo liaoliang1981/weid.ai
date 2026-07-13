@@ -148,17 +148,23 @@ const styles = `
   .usage li:last-child { margin-bottom: 0; }
 `;
 
-// A small hub-and-spoke network — the same motif used across weid.ai's
-// branding (see assets/icon.png) — as the one visual anchor on the page.
+// A diamond-shaped hub-and-spoke network — four nodes forming a rhombus
+// outline, connected through a center hub — as the one visual anchor on
+// the page.
 const heroGraphic = `<svg class="hero-graphic" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
-  <line x1="70" y1="40" x2="35" y2="90" stroke="#3d5a80" stroke-width="4"/>
-  <line x1="70" y1="40" x2="105" y2="90" stroke="#3d5a80" stroke-width="4"/>
-  <line x1="35" y1="90" x2="70" y2="105" stroke="#3d5a80" stroke-width="4"/>
-  <line x1="105" y1="90" x2="70" y2="105" stroke="#3d5a80" stroke-width="4"/>
-  <circle cx="70" cy="40" r="10" fill="#e6e9f5"/>
-  <circle cx="35" cy="90" r="8" fill="#e6e9f5"/>
-  <circle cx="105" cy="90" r="8" fill="#e6e9f5"/>
-  <circle cx="70" cy="105" r="12" fill="#63b3ed"/>
+  <line x1="70" y1="20" x2="120" y2="70" stroke="#3d5a80" stroke-width="4"/>
+  <line x1="120" y1="70" x2="70" y2="120" stroke="#3d5a80" stroke-width="4"/>
+  <line x1="70" y1="120" x2="20" y2="70" stroke="#3d5a80" stroke-width="4"/>
+  <line x1="20" y1="70" x2="70" y2="20" stroke="#3d5a80" stroke-width="4"/>
+  <line x1="70" y1="20" x2="70" y2="70" stroke="#3d5a80" stroke-width="3"/>
+  <line x1="120" y1="70" x2="70" y2="70" stroke="#3d5a80" stroke-width="3"/>
+  <line x1="70" y1="120" x2="70" y2="70" stroke="#3d5a80" stroke-width="3"/>
+  <line x1="20" y1="70" x2="70" y2="70" stroke="#3d5a80" stroke-width="3"/>
+  <circle cx="70" cy="20" r="9" fill="#e6e9f5"/>
+  <circle cx="120" cy="70" r="9" fill="#e6e9f5"/>
+  <circle cx="70" cy="120" r="9" fill="#e6e9f5"/>
+  <circle cx="20" cy="70" r="9" fill="#e6e9f5"/>
+  <circle cx="70" cy="70" r="12" fill="#63b3ed"/>
 </svg>`;
 
 // Plain links to ?lang=xx, not a <select>/JS toggle — works with zero
