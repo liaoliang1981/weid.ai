@@ -131,6 +131,8 @@ export interface Catalog {
       manualFallback: string;
       saveWarning: string;
       afterAdded: string;
+      codePlaceholder: string;
+      incorrectCode: string;
       continueLink: string;
     };
     chooser: {

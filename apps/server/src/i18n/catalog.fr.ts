@@ -135,6 +135,8 @@ export const fr: Catalog = {
       manualFallback: "Si votre application ne peut pas scanner, saisissez cette clé manuellement :",
       saveWarning: "Enregistrez-la maintenant. Perdre cette clé signifie perdre l'accès à ce compte — il n'y a aucun moyen de la récupérer.",
       afterAdded: "Une fois ajoutée, votre application affichera un code à 6 chiffres qui change en continu. Utilisez ce code pour vous connecter.",
+      codePlaceholder: "Code à 6 chiffres de votre application d'authentification",
+      incorrectCode: "Ce code ne correspond pas — vérifiez votre application d'authentification et réessayez.",
       continueLink: "Je l'ai enregistrée, continuer →",
     },
     chooser: {

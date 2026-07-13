@@ -135,6 +135,8 @@ export const ko: Catalog = {
       manualFallback: "앱으로 스캔할 수 없다면 이 키를 직접 입력하세요:",
       saveWarning: "지금 바로 저장하세요. 이 키를 분실하면 계정에 다시 접근할 수 없습니다 — 복구 방법이 없습니다.",
       afterAdded: "추가가 완료되면 앱에 계속 바뀌는 6자리 코드가 표시됩니다. 그 코드로 로그인하세요.",
+      codePlaceholder: "인증 앱에 표시된 6자리 코드",
+      incorrectCode: "코드가 일치하지 않습니다 — 인증 앱을 확인하고 다시 시도하세요.",
       continueLink: "저장 완료, 계속하기 →",
     },
     chooser: {

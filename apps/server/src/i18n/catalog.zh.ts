@@ -134,6 +134,8 @@ export const zh: Catalog = {
       manualFallback: "App 扫不了码的话，手动输入这个密钥：",
       saveWarning: "现在就保存好。丢失这个密钥就等于丢失这个账号——没有找回通道。",
       afterAdded: "添加成功后，App 会显示一个不断变化的 6 位验证码，用这个验证码登录。",
+      codePlaceholder: "验证器 App 里的 6 位验证码",
+      incorrectCode: "验证码不对，请检查验证器 App 后重试。",
       continueLink: "我已保存，继续 →",
     },
     chooser: {

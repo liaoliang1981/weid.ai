@@ -135,6 +135,8 @@ export const de: Catalog = {
       manualFallback: "Falls Ihre App nicht scannen kann, geben Sie diesen Schlüssel stattdessen manuell ein:",
       saveWarning: "Speichern Sie dies jetzt. Der Verlust dieses Schlüssels bedeutet den Verlust des Zugriffs auf dieses Konto — es gibt keine Wiederherstellung.",
       afterAdded: "Nach dem Hinzufügen zeigt Ihre App einen rotierenden 6-stelligen Code an. Verwenden Sie diesen Code, um sich anzumelden.",
+      codePlaceholder: "6-stelliger Code aus Ihrer Authenticator-App",
+      incorrectCode: "Dieser Code stimmt nicht überein — prüfen Sie Ihre Authenticator-App und versuchen Sie es erneut.",
       continueLink: "Ich habe ihn gespeichert, weiter →",
     },
     chooser: {

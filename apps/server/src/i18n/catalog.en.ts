@@ -135,6 +135,8 @@ export const en: Catalog = {
       manualFallback: "If your app can't scan, enter this key manually instead:",
       saveWarning: "Save this now. Losing this key means losing access to this account — there is no recovery.",
       afterAdded: "Once added, your app will show a rotating 6-digit code. Use that code to log in.",
+      codePlaceholder: "6-digit code from your authenticator app",
+      incorrectCode: "That code doesn't match — check your authenticator app and try again.",
       continueLink: "I've saved it, continue →",
     },
     chooser: {

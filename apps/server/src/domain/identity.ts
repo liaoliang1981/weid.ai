@@ -35,6 +35,15 @@ export async function createIdentity(db: Db, sessionSecret: string, nickname: st
   return { userId, number, secret, otpauthUrl: totpAuthUrl(secret, formatNumber(number)) };
 }
 
+// Decrypts the caller's own already-created TOTP secret, so the setup page
+// can re-derive the QR code on a failed verification attempt without ever
+// storing or re-transmitting the raw secret through the client.
+export async function getDecryptedTotpSecret(db: Db, sessionSecret: string, userId: string): Promise<string | null> {
+  const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  if (!user) return null;
+  return decryptTotpSecret(sessionSecret, user.totpSecretEncrypted);
+}
+
 export async function loginWithTotp(db: Db, sessionSecret: string, numberRaw: string, code: string): Promise<string> {
   const number = normalizeNumber(numberRaw);
   if (number === null) {

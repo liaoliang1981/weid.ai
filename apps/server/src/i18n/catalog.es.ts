@@ -135,6 +135,8 @@ export const es: Catalog = {
       manualFallback: "Si tu app no puede escanear, introduce esta clave manualmente:",
       saveWarning: "Guárdala ahora. Perder esta clave significa perder el acceso a esta cuenta — no hay forma de recuperarla.",
       afterAdded: "Una vez añadida, tu app mostrará un código de 6 dígitos que cambia constantemente. Usa ese código para iniciar sesión.",
+      codePlaceholder: "Código de 6 dígitos de tu app autenticadora",
+      incorrectCode: "Ese código no coincide — revisa tu app autenticadora e inténtalo de nuevo.",
       continueLink: "Ya la he guardado, continuar →",
     },
     chooser: {

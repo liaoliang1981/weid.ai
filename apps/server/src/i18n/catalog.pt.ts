@@ -135,6 +135,8 @@ export const pt: Catalog = {
       manualFallback: "Se o seu aplicativo não conseguir escanear, insira esta chave manualmente:",
       saveWarning: "Salve isto agora. Perder esta chave significa perder o acesso a esta conta — não há recuperação.",
       afterAdded: "Depois de adicionada, seu aplicativo mostrará um código rotativo de 6 dígitos. Use esse código para fazer login.",
+      codePlaceholder: "Código de 6 dígitos do seu aplicativo autenticador",
+      incorrectCode: "Esse código não confere — verifique seu aplicativo autenticador e tente novamente.",
       continueLink: "Já salvei, continuar →",
     },
     chooser: {

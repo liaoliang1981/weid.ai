@@ -4,7 +4,8 @@ import QRCode from "qrcode";
 import { type Db } from "@weid/db";
 import { createSessionToken, verifySessionToken } from "../session.js";
 import { updateProfile, getAccountByUserId, whoami } from "../domain/account.js";
-import { createIdentity, loginWithTotp } from "../domain/identity.js";
+import { createIdentity, loginWithTotp, getDecryptedTotpSecret } from "../domain/identity.js";
+import { totpAuthUrl, verifyTotpCode } from "../domain/totp.js";
 import { formatNumber } from "../domain/numbers.js";
 import { DomainError } from "../domain/errors.js";
 import { resolveLocale, t, LOCALE_COOKIE, LOCALE_QUERY_PARAM, type Locale } from "../i18n/index.js";
@@ -32,6 +33,13 @@ function escapeHtml(input: string): string {
 // replaces, so the user must save this before continuing. Nickname, number,
 // and secret are all minted together (see domain/identity.ts), so the QR
 // already carries the real number — one scan is enough.
+// Requires the current 6-digit code before continuing, so a failed scan is
+// caught right here instead of surfacing only at the next login attempt —
+// at which point, per the no-recovery design, it would be too late. On a
+// wrong code this re-renders the same page (still showing the secret) since
+// this is still within the same setup flow, not a later "show it again"
+// request; the redline (§8.6) is about never re-exposing it after setup
+// completes, not about a single retry loop during setup itself.
 async function totpSecretPage(
   msg: ReturnType<typeof t>,
   locale: Locale,
@@ -39,9 +47,10 @@ async function totpSecretPage(
   secret: string,
   otpauthUrl: string,
   next: string | undefined,
+  error?: string,
 ): Promise<string> {
   const p = msg.pages.secretPage;
-  const continueHref = escapeHtml(next ?? "/me");
+  const nextValue = escapeHtml(next ?? "");
   const qrDataUrl = await QRCode.toDataURL(otpauthUrl, { margin: 1, width: 240 });
   return pageShell(
     p.title,
@@ -54,7 +63,12 @@ async function totpSecretPage(
   <p><code style="font-size:1.2em">${escapeHtml(secret)}</code></p>
   <p><strong>${p.saveWarning}</strong></p>
   <p>${p.afterAdded}</p>
-  <a href="${continueHref}">${p.continueLink}</a>`,
+  ${error ? `<p><strong>${escapeHtml(error)}</strong></p>` : ""}
+  <form method="post" action="/auth/identity/verify-setup">
+    <input type="hidden" name="next" value="${nextValue}">
+    <input type="text" name="code" required inputmode="numeric" pattern="[0-9]{6}" placeholder="${escapeHtml(p.codePlaceholder)}">
+    <button type="submit">${p.continueLink}</button>
+  </form>`,
   );
 }
 
@@ -185,6 +199,40 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
     return reply
       .type("text/html")
       .send(await totpSecretPage(msg, locale, identity.number, identity.secret, identity.otpauthUrl, next));
+  });
+
+  // Confirms the just-generated TOTP secret actually made it into the
+  // user's authenticator app before letting them leave the setup page. On a
+  // wrong code, re-renders the same secret page (still holding a valid
+  // session from /auth/identity/new) rather than sending them back to the
+  // chooser, since restarting registration would mint a second, unwanted
+  // identity.
+  app.post("/auth/identity/verify-setup", async (req, reply) => {
+    const userId = requireSession(req, reply);
+    if (!userId) return;
+
+    const locale = resolveRequestLocale(req, reply);
+    const msg = t(locale);
+    const schema = z.object({ code: z.string().min(1), next: z.string().optional() });
+    const parsed = schema.safeParse(req.body);
+    const next = parsed.success && isSafeNext(parsed.data.next) ? parsed.data.next : undefined;
+
+    const [account, secret] = await Promise.all([
+      getAccountByUserId(db, userId),
+      getDecryptedTotpSecret(db, sessionSecret, userId),
+    ]);
+    if (!account || !secret) {
+      return reply.code(409).send({ error: msg.pages.accountDataInconsistentShort });
+    }
+
+    if (parsed.success && verifyTotpCode(secret, parsed.data.code)) {
+      return reply.redirect(next ?? "/me");
+    }
+
+    const otpauthUrl = totpAuthUrl(secret, formatNumber(account.number));
+    return reply
+      .type("text/html")
+      .send(await totpSecretPage(msg, locale, account.number, secret, otpauthUrl, next, msg.pages.secretPage.incorrectCode));
   });
 
   // Logs back in with the Weid number + the current authenticator-app code.
