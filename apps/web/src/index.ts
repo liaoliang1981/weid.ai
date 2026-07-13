@@ -68,31 +68,10 @@ const styles = `
     flex-wrap: wrap;
   }
   .logo {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
     font-weight: 700;
     font-size: 1.15rem;
     letter-spacing: -0.01em;
     color: var(--ink);
-  }
-  .logo .sim {
-    width: 16px;
-    height: 20px;
-    background: var(--accent);
-    border-radius: 3px 3px 3px 8px;
-    position: relative;
-    flex: none;
-  }
-  .logo .sim::after {
-    content: "";
-    position: absolute;
-    left: 3px;
-    top: 5px;
-    width: 10px;
-    height: 8px;
-    border: 1.2px solid rgba(255, 255, 255, 0.9);
-    border-radius: 2px;
   }
   .lang-switcher {
     display: flex;
@@ -344,7 +323,7 @@ const idCardDemo = `<div class="demo" aria-hidden="true">
   <div class="event msg2">💬 Reply sent</div>
 </div>`;
 
-const logo = `<div class="logo"><span class="sim"></span>weid.ai</div>`;
+const logo = `<div class="logo">weid.ai</div>`;
 
 // Plain links to ?lang=xx, not a <select>/JS toggle — works with zero
 // JavaScript, matching the rest of this site. `path` is the current
