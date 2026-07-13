@@ -26,16 +26,16 @@ export const langSwitcherStyles = `
   }
   .lang-switcher a {
     font-size: 0.82rem;
-    color: #8b93b0;
+    color: var(--muted);
     text-decoration: none;
     padding: 0.15rem 0.1rem;
     border-bottom: 2px solid transparent;
   }
   .lang-switcher a:hover {
-    color: #e6e9f5;
+    color: var(--ink);
   }
   .lang-switcher a.active {
-    color: #63b3ed;
-    border-bottom-color: #63b3ed;
+    color: var(--accent);
+    border-bottom-color: var(--accent);
   }
 `;

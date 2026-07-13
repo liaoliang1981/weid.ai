@@ -1,25 +1,26 @@
 import { langSwitcher, langSwitcherStyles } from "./lang-switcher.js";
 import type { Locale } from "../i18n/index.js";
 
-// Same visual language as apps/web (weid.ai) — dark, single blue accent —
-// so auth.weid.ai doesn't feel like a different, unstyled site mid-flow.
-// Plain server-rendered HTML with embedded CSS, no frontend framework, per
-// CLAUDE.md §7.
+// Same visual language as apps/web (weid.ai) — light "paper" theme, one
+// carrier-blue accent — so auth.weid.ai doesn't feel like a different,
+// unstyled site mid-flow. Plain server-rendered HTML with embedded CSS, no
+// frontend framework, per CLAUDE.md §7.
 const styles = `
   :root {
-    --bg: #0a0e1a;
-    --bg-card: #11172a;
-    --border: #232b45;
-    --text: #e6e9f5;
-    --text-dim: #8b93b0;
-    --accent: #63b3ed;
+    --paper: #f6f8fb;
+    --card: #ffffff;
+    --line: #d8e0ec;
+    --ink: #0e1b33;
+    --muted: #5a6b85;
+    --accent: #2458e6;
+    --accent-soft: #e7eeff;
   }
   * { box-sizing: border-box; }
   html, body {
     margin: 0;
     padding: 0;
-    background: var(--bg);
-    color: var(--text);
+    background: var(--paper);
+    color: var(--ink);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     line-height: 1.6;
   }
@@ -29,21 +30,20 @@ const styles = `
     padding: 1.5rem 1.5rem 4rem;
   }
   h1 { font-size: 1.6rem; font-weight: 700; margin: 0 0 1.25rem; letter-spacing: -0.01em; }
-  h2 { font-size: 0.95rem; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin: 1.75rem 0 0.6rem; }
-  p { color: var(--text-dim); }
+  h2 { font-size: 0.95rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin: 1.75rem 0 0.6rem; }
+  p { color: var(--muted); }
   a { color: var(--accent); }
-  strong { color: var(--text); }
+  strong { color: var(--ink); }
   code {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
+    background: var(--accent-soft);
     border-radius: 6px;
     padding: 0.15em 0.5em;
     color: var(--accent);
     word-break: break-all;
   }
   form {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
+    background: var(--card);
+    border: 1.5px solid var(--line);
     border-radius: 12px;
     padding: 1.25rem;
     display: flex;
@@ -52,20 +52,20 @@ const styles = `
     margin-bottom: 1rem;
   }
   input {
-    background: var(--bg);
-    border: 1px solid var(--border);
+    background: var(--paper);
+    border: 1.5px solid var(--line);
     border-radius: 8px;
     padding: 0.6rem 0.75rem;
-    color: var(--text);
+    color: var(--ink);
     font-size: 1rem;
   }
-  input::placeholder { color: var(--text-dim); }
+  input::placeholder { color: var(--muted); }
   button {
     background: var(--accent);
     border: none;
     border-radius: 8px;
     padding: 0.65rem 1rem;
-    color: #05070d;
+    color: #fff;
     font-weight: 600;
     font-size: 0.95rem;
     cursor: pointer;

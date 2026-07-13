@@ -26,144 +26,325 @@ function resolveRequestLocale(req: FastifyRequest, reply: FastifyReply): Locale 
   return locale;
 }
 
-// Shared visual language for every page on this site — dark, a single blue
-// accent, no external fonts/CSS/JS (self-contained, no network requests
-// beyond the page itself). No frontend framework per CLAUDE.md §7: this is
-// plain server-rendered HTML with embedded CSS.
+// Shared visual language for every page on this site — light "paper"
+// theme, one carrier-blue accent, no external fonts/CSS/JS (self-contained,
+// no network requests beyond the page itself, system font stack stands in
+// for the display faces in the original design reference). No frontend
+// framework per CLAUDE.md §7: plain server-rendered HTML with embedded CSS.
 const styles = `
   :root {
-    --bg: #0a0e1a;
-    --bg-card: #11172a;
-    --border: #232b45;
-    --text: #e6e9f5;
-    --text-dim: #8b93b0;
-    --accent: #63b3ed;
-    --accent-dim: #3d5a80;
+    --paper: #f6f8fb;
+    --card: #ffffff;
+    --line: #d8e0ec;
+    --ink: #0e1b33;
+    --muted: #5a6b85;
+    --accent: #2458e6;
+    --accent-soft: #e7eeff;
+    --signal: #17b877;
   }
   * { box-sizing: border-box; }
   html, body {
     margin: 0;
     padding: 0;
-    background: var(--bg);
-    color: var(--text);
+    background: var(--paper);
+    color: var(--ink);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    line-height: 1.6;
+    line-height: 1.65;
   }
+  .mono { font-family: ui-monospace, "SF Mono", "IBM Plex Mono", Menlo, Consolas, monospace; }
   .wrap {
-    max-width: 720px;
+    max-width: 1080px;
     margin: 0 auto;
-    padding: 1.5rem 1.5rem 5rem;
+    padding: 0 6vw 5rem;
+  }
+  header.site {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 1.5rem 6vw 0;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-weight: 700;
+    font-size: 1.15rem;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .logo .sim {
+    width: 16px;
+    height: 20px;
+    background: var(--accent);
+    border-radius: 3px 3px 3px 8px;
+    position: relative;
+    flex: none;
+  }
+  .logo .sim::after {
+    content: "";
+    position: absolute;
+    left: 3px;
+    top: 5px;
+    width: 10px;
+    height: 8px;
+    border: 1.2px solid rgba(255, 255, 255, 0.9);
+    border-radius: 2px;
   }
   .lang-switcher {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.4rem 0.6rem;
-    margin: 0 0 3rem;
+    justify-content: flex-end;
+    gap: 0.3rem 0.7rem;
   }
   .lang-switcher a {
     font-size: 0.82rem;
-    color: var(--text-dim);
+    color: var(--muted);
     text-decoration: none;
     padding: 0.15rem 0.1rem;
     border-bottom: 2px solid transparent;
   }
-  .lang-switcher a:hover {
-    color: var(--text);
-  }
+  .lang-switcher a:hover { color: var(--ink); }
   .lang-switcher a.active {
     color: var(--accent);
     border-bottom-color: var(--accent);
   }
-  .hero-graphic {
-    display: block;
-    margin: 0 auto 2rem;
-    width: 140px;
-    height: 140px;
+
+  /* ---------- hero ---------- */
+  .hero {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 3rem 6vw 4rem;
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: 3rem;
+    align-items: center;
   }
   h1 {
-    font-size: 2.25rem;
-    font-weight: 700;
-    text-align: center;
-    margin: 0 0 1.25rem;
+    font-size: clamp(2rem, 4.5vw, 2.75rem);
+    font-weight: 800;
     letter-spacing: -0.02em;
+    margin: 0;
   }
   .vision {
-    font-size: 1.35rem;
+    font-size: clamp(1.05rem, 1.8vw, 1.3rem);
     font-weight: 600;
-    text-align: center;
-    color: var(--text);
-    margin: 0 0 1.75rem;
-    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin: 0.9rem 0 0;
+    letter-spacing: -0.005em;
   }
   .intro {
-    font-size: 1.05rem;
-    color: var(--text-dim);
-    text-align: center;
-    max-width: 560px;
-    margin: 0 auto;
+    margin-top: 1.1rem;
+    font-size: 0.98rem;
+    color: var(--muted);
+    max-width: 46ch;
   }
-  .intro a, a { color: var(--accent); text-decoration: none; }
-  .intro a:hover, a:hover { text-decoration: underline; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
   code {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 0.15em 0.5em;
+    background: var(--accent-soft);
+    border-radius: 5px;
+    padding: 0.1em 0.4em;
     font-size: 0.95em;
     color: var(--accent);
   }
-  .card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin: 2rem 0;
+
+  /* ---------- id-card demo ---------- */
+  .demo {
+    position: relative;
+    min-height: 380px;
   }
-  h2 {
-    font-size: 1.1rem;
-    color: var(--text-dim);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin: 0 0 0.5rem;
+  .idcard {
+    position: absolute;
+    width: min(260px, 90%);
+    background: var(--card);
+    border: 1.5px solid var(--line);
+    border-radius: 14px;
+    padding: 0.9rem 1.1rem;
+    box-shadow: 0 12px 32px rgba(14, 27, 51, 0.08);
   }
+  .idcard.a { top: 0; left: 0; z-index: 2; }
+  .idcard.b { bottom: 40px; right: 0; z-index: 2; }
+  .idcard .row { display: flex; align-items: center; gap: 0.7rem; }
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+  }
+  .idcard.a .avatar { background: var(--accent-soft); }
+  .idcard.b .avatar { background: #e9f9f1; }
+  .idcard .name {
+    font-weight: 700;
+    font-size: 0.92rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .online { width: 7px; height: 7px; border-radius: 50%; background: var(--signal); flex: none; }
+  .idcard .num { font-size: 0.78rem; color: var(--muted); letter-spacing: 0.02em; }
+  .tags { margin-top: 0.7rem; display: flex; flex-wrap: wrap; gap: 0.35rem; }
+  .tag {
+    font-size: 0.72rem;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 0.15rem 0.55rem;
+    border-radius: 100px;
+  }
+  .idcard.b .tag { color: #0e8a5a; background: #e9f9f1; }
+
+  .wire { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+  .wire path {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 2;
+    stroke-dasharray: 6 8;
+    opacity: 0.5;
+  }
+  @keyframes dashmove { to { stroke-dashoffset: -140; } }
+  .wire path { animation: dashmove 6s linear infinite; }
+
+  .event {
+    position: absolute;
+    z-index: 3;
+    font-size: 0.75rem;
+    padding: 0.4rem 0.7rem;
+    border-radius: 10px;
+    background: var(--ink);
+    color: #fff;
+    box-shadow: 0 6px 18px rgba(14, 27, 51, 0.18);
+    opacity: 0;
+    transform: translateY(6px);
+    animation-timing-function: ease;
+    animation-iteration-count: infinite;
+    animation-duration: 12s;
+    white-space: nowrap;
+  }
+  .event.req { top: 34%; left: 4%; animation-name: seq; }
+  .event.acc { top: 46%; right: 10%; background: var(--signal); animation-name: seq; animation-delay: 3s; }
+  .event.msg1 { top: 60%; left: 0; background: #fff; color: var(--ink); border: 1.5px solid var(--line); animation-name: seq; animation-delay: 6s; }
+  .event.msg2 { top: 74%; right: 2%; background: var(--accent); animation-name: seq; animation-delay: 9s; }
+  @keyframes seq {
+    0% { opacity: 0; transform: translateY(6px); }
+    4% { opacity: 1; transform: translateY(0); }
+    24% { opacity: 1; transform: translateY(0); }
+    30% { opacity: 0; transform: translateY(-4px); }
+    100% { opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .wire path { animation: none; }
+    .event { animation: none; opacity: 1; transform: none; }
+    .event.msg2 { display: none; }
+  }
+
+  /* ---------- usage section ---------- */
   .usage {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1.25rem;
-    margin-top: 2.5rem;
+    margin-top: 1rem;
   }
-  @media (max-width: 560px) {
+  @media (max-width: 720px) {
     .usage { grid-template-columns: 1fr; }
   }
-  .usage h2 { margin-bottom: 0.75rem; }
-  .usage ol {
-    margin: 0;
-    padding-left: 1.25rem;
-    color: var(--text-dim);
-    font-size: 0.95rem;
+  .card {
+    background: var(--card);
+    border: 1.5px solid var(--line);
+    border-radius: 16px;
+    padding: 1.4rem;
   }
-  .usage li { margin-bottom: 0.5rem; }
-  .usage li:last-child { margin-bottom: 0; }
+  h2 {
+    font-size: 0.95rem;
+    color: var(--ink);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0 0 1rem;
+  }
+  .step { display: flex; gap: 0.8rem; margin-bottom: 0.9rem; align-items: flex-start; }
+  .step:last-child { margin-bottom: 0; }
+  .step .no {
+    font-family: ui-monospace, "SF Mono", "IBM Plex Mono", Menlo, Consolas, monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    flex: none;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .step p { margin: 0; font-size: 0.9rem; color: var(--muted); padding-top: 0.15rem; }
+
+  footer.site {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 2rem 6vw 2.5rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+    border-top: 1.5px solid var(--line);
+  }
+
+  @media (max-width: 720px) {
+    .hero { grid-template-columns: 1fr; padding-top: 1rem; }
+    .demo { min-height: 340px; margin-top: 1rem; }
+  }
+
+  /* ---------- 404 / profile shared page shell ---------- */
+  .notfound-wrap, .profile-wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 3rem 6vw 5rem;
+  }
 `;
 
-// A 3D pyramid wireframe — the visible front face (apex + two base
-// corners) drawn solid, and the edges running back to the hidden rear
-// vertex (the hub) drawn dashed, the standard convention for showing depth
-// in a 2D line drawing — as the one visual anchor on the page.
-const heroGraphic = `<svg class="hero-graphic" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
-  <line x1="70" y1="25" x2="30" y2="95" stroke="#3d5a80" stroke-width="4"/>
-  <line x1="70" y1="25" x2="110" y2="95" stroke="#3d5a80" stroke-width="4"/>
-  <line x1="30" y1="95" x2="110" y2="95" stroke="#3d5a80" stroke-width="4"/>
-  <line x1="70" y1="25" x2="70" y2="115" stroke="#3d5a80" stroke-width="3" stroke-dasharray="4 4"/>
-  <line x1="30" y1="95" x2="70" y2="115" stroke="#3d5a80" stroke-width="3" stroke-dasharray="4 4"/>
-  <line x1="110" y1="95" x2="70" y2="115" stroke="#3d5a80" stroke-width="3" stroke-dasharray="4 4"/>
-  <circle cx="70" cy="25" r="9" fill="#e6e9f5"/>
-  <circle cx="30" cy="95" r="9" fill="#e6e9f5"/>
-  <circle cx="110" cy="95" r="9" fill="#e6e9f5"/>
-  <circle cx="70" cy="115" r="12" fill="#63b3ed"/>
-</svg>`;
+// Two ID cards connected by an animated dashed wire, with a short sequence
+// of event badges (friend request -> accepted -> message -> reply). Purely
+// illustrative — labels stay in English across all locales, same
+// convention as the "Settings"/"Connectors" UI-label text in the usage
+// steps, so this doesn't require per-language translation of invented
+// chat content. Pure CSS animation, no JavaScript.
+const idCardDemo = `<div class="demo" aria-hidden="true">
+  <svg class="wire" viewBox="0 0 400 380" preserveAspectRatio="none">
+    <path d="M 130 90 C 240 150, 120 230, 230 280"/>
+  </svg>
+  <div class="idcard a">
+    <div class="row">
+      <div class="avatar">🔍</div>
+      <div>
+        <div class="name">Research Agent <span class="online"></span></div>
+        <div class="num mono">WEID-10024</div>
+      </div>
+    </div>
+    <div class="tags"><span class="tag">search</span><span class="tag">summarize</span></div>
+  </div>
+  <div class="idcard b">
+    <div class="row">
+      <div class="avatar">📊</div>
+      <div>
+        <div class="name">Data Agent <span class="online"></span></div>
+        <div class="num mono">WEID-10041</div>
+      </div>
+    </div>
+    <div class="tags"><span class="tag">analyze</span><span class="tag">python</span></div>
+  </div>
+  <div class="event req">📇 Friend request sent</div>
+  <div class="event acc">✓ Accepted</div>
+  <div class="event msg1">💬 New message</div>
+  <div class="event msg2">💬 Reply sent</div>
+</div>`;
+
+const logo = `<div class="logo"><span class="sim"></span>weid.ai</div>`;
 
 // Plain links to ?lang=xx, not a <select>/JS toggle — works with zero
 // JavaScript, matching the rest of this site. `path` is the current
@@ -179,7 +360,7 @@ function langSwitcher(path: string, current: Locale): string {
 
 function pageShell(title: string, path: string, locale: Locale, body: string): string {
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title}</title><style>${styles}</style></head>
-<body><div class="wrap">${langSwitcher(path, locale)}${body}</div></body></html>`;
+<body><header class="site">${logo}${langSwitcher(path, locale)}</header>${body}<footer class="site">© weid.ai</footer></body></html>`;
 }
 
 app.get("/healthz", async () => {
@@ -194,19 +375,25 @@ app.get("/", async (req, reply) => {
       p.title,
       "/",
       locale,
-      `${heroGraphic}
-  <h1>${p.heading}</h1>
-  <p class="vision">${p.vision}</p>
-  <p class="intro">${p.intro}</p>
+      `<div class="hero">
+    <div>
+      <h1>${p.heading}</h1>
+      <p class="vision">${p.vision}</p>
+      <p class="intro">${p.intro}</p>
+    </div>
+    ${idCardDemo}
+  </div>
+  <div class="wrap">
   <div class="usage">
     <div class="card">
       <h2>${p.claudeHeading}</h2>
-      <ol>${p.claudeSteps.map((step) => `<li>${step}</li>`).join("")}</ol>
+      ${p.claudeSteps.map((step, i) => `<div class="step"><span class="no">0${i + 1}</span><p>${step}</p></div>`).join("")}
     </div>
     <div class="card">
       <h2>${p.chatgptHeading}</h2>
-      <ol>${p.chatgptSteps.map((step) => `<li>${step}</li>`).join("")}</ol>
+      ${p.chatgptSteps.map((step, i) => `<div class="step"><span class="no">0${i + 1}</span><p>${step}</p></div>`).join("")}
     </div>
+  </div>
   </div>`,
     ),
   );
@@ -218,7 +405,14 @@ function notFoundPage(reply: FastifyReply, req: FastifyRequest) {
   reply
     .code(404)
     .type("text/html")
-    .send(pageShell(p.title, req.url.split("?")[0], locale, `<h1>${p.heading}</h1><p class="intro">${p.body}</p>`));
+    .send(
+      pageShell(
+        p.title,
+        req.url.split("?")[0],
+        locale,
+        `<div class="notfound-wrap"><h1>${p.heading}</h1><p class="intro">${p.body}</p></div>`,
+      ),
+    );
 }
 
 async function loadPublicProfile(number: bigint) {
@@ -265,14 +459,16 @@ app.get<{ Params: { number: string } }>("/:number(^[0-9]+$)", async (req, reply)
       `${formatNumber(profile.number)} ${nickname} — weid.ai`,
       `/${profile.number}`,
       locale,
-      `<h1>${formatNumber(profile.number)}</h1>
+      `<div class="profile-wrap">
+  <h1>${formatNumber(profile.number)}</h1>
   <p class="vision">${nickname}</p>
   <div class="card">
     ${description ? `<p>${description}</p>` : ""}
     ${capabilities.length ? `<h2>${p.capabilitiesLabel}</h2><p>${capabilities.map(escapeHtml).join(", ")}</p>` : ""}
   </div>
   <p class="intro">${p.addFriendInstruction(formatNumber(profile.number))}</p>
-  <p class="intro"><a href="/a/${profile.number}/agent-card.json">agent-card.json</a></p>`,
+  <p class="intro"><a href="/a/${profile.number}/agent-card.json">agent-card.json</a></p>
+  </div>`,
     ),
   );
 });
