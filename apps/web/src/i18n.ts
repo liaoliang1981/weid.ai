@@ -77,6 +77,8 @@ interface WebCatalog {
     claudeSteps: [string, string, string];
     chatgptHeading: string;
     chatgptSteps: [string, string, string];
+    manusHeading: string;
+    manusSteps: [string, string, string];
   };
   notFound: {
     title: string;
@@ -109,6 +111,12 @@ const catalogs: Record<Locale, WebCatalog> = {
         "Click Browse plugins, then the + icon, and add a custom connector with https://mcp.weid.ai.",
         "Click Connect and follow the prompts to authorize — your AI now has a number.",
       ],
+      manusHeading: "Using Manus",
+      manusSteps: [
+        "Open manus.im and go to Settings → Connectors.",
+        'Click Create, choose "Add MCP via URL," and enter https://mcp.weid.ai.',
+        "Follow the prompts to authorize — your AI now has a number.",
+      ],
     },
     notFound: { title: "weid.ai — 404", heading: "404", body: "This page does not exist." },
     profile: {
@@ -133,6 +141,12 @@ const catalogs: Record<Locale, WebCatalog> = {
         "打开 chatgpt.com，进入设置 → 插件。",
         "点击浏览插件，再点加号，添加自定义连接器，填 https://mcp.weid.ai。",
         "点击连接并按提示完成授权，你的 AI 就有号码了。",
+      ],
+      manusHeading: "在 Manus 里使用",
+      manusSteps: [
+        "打开 manus.im，进入设置 → 连接器。",
+        "点击创建，选择「通过 URL 添加 MCP」，填 https://mcp.weid.ai。",
+        "按提示完成授权，你的 AI 就有号码了。",
       ],
     },
     notFound: { title: "weid.ai — 404", heading: "404", body: "这个页面不存在。" },
@@ -161,6 +175,12 @@ const catalogs: Record<Locale, WebCatalog> = {
         "Browse plugins をクリックし、+ アイコンからカスタムコネクタを追加して https://mcp.weid.ai を入力します。",
         "Connect をクリックし、画面の指示に従って認可すると、あなたの AI に番号が割り当てられます。",
       ],
+      manusHeading: "Manus を使う場合",
+      manusSteps: [
+        "manus.im を開き、Settings → Connectors に進みます。",
+        "Create をクリックして「Add MCP via URL」を選び、https://mcp.weid.ai を入力します。",
+        "画面の指示に従って認可すると、あなたの AI に番号が割り当てられます。",
+      ],
     },
     notFound: { title: "weid.ai — 404", heading: "404", body: "このページは存在しません。" },
     profile: {
@@ -187,6 +207,12 @@ const catalogs: Record<Locale, WebCatalog> = {
         "chatgpt.com을 열고 Settings → Plugins로 이동하세요.",
         "Browse plugins를 클릭한 다음 + 아이콘을 눌러 커스텀 커넥터를 추가하고 https://mcp.weid.ai를 입력하세요.",
         "Connect를 클릭하고 안내에 따라 승인하면 당신의 AI가 번호를 받습니다.",
+      ],
+      manusHeading: "Manus 사용하기",
+      manusSteps: [
+        "manus.im을 열고 Settings → Connectors로 이동하세요.",
+        "Create를 클릭하고 \"Add MCP via URL\"을 선택한 다음 https://mcp.weid.ai를 입력하세요.",
+        "안내에 따라 승인하면 당신의 AI가 번호를 받습니다.",
       ],
     },
     notFound: { title: "weid.ai — 404", heading: "404", body: "이 페이지는 존재하지 않습니다." },
@@ -215,6 +241,12 @@ const catalogs: Record<Locale, WebCatalog> = {
         "Haz clic en Browse plugins, luego en el icono +, y agrega un conector personalizado con https://mcp.weid.ai.",
         "Haz clic en Connect y sigue las indicaciones para autorizar: tu IA ya tiene un número.",
       ],
+      manusHeading: "Usando Manus",
+      manusSteps: [
+        "Abre manus.im y ve a Settings → Connectors.",
+        'Haz clic en Create, elige "Add MCP via URL" e ingresa https://mcp.weid.ai.',
+        "Sigue las indicaciones para autorizar: tu IA ya tiene un número.",
+      ],
     },
     notFound: { title: "weid.ai — 404", heading: "404", body: "Esta página no existe." },
     profile: {
@@ -241,6 +273,12 @@ const catalogs: Record<Locale, WebCatalog> = {
         "Ouvrez chatgpt.com et allez dans Settings → Plugins.",
         "Cliquez sur Browse plugins, puis sur l'icône +, et ajoutez un connecteur personnalisé avec https://mcp.weid.ai.",
         "Cliquez sur Connect et suivez les instructions pour autoriser — votre IA a maintenant un numéro.",
+      ],
+      manusHeading: "Avec Manus",
+      manusSteps: [
+        "Ouvrez manus.im et allez dans Settings → Connectors.",
+        'Cliquez sur Create, choisissez « Add MCP via URL » et saisissez https://mcp.weid.ai.',
+        "Suivez les instructions pour autoriser — votre IA a maintenant un numéro.",
       ],
     },
     notFound: { title: "weid.ai — 404", heading: "404", body: "Cette page n'existe pas." },
@@ -269,6 +307,12 @@ const catalogs: Record<Locale, WebCatalog> = {
         "Klicken Sie auf Browse plugins, dann auf das +-Symbol, und fügen Sie einen benutzerdefinierten Connector mit https://mcp.weid.ai hinzu.",
         "Klicken Sie auf Connect und folgen Sie den Anweisungen zur Autorisierung — Ihre KI hat jetzt eine Nummer.",
       ],
+      manusHeading: "Mit Manus",
+      manusSteps: [
+        "Öffnen Sie manus.im und gehen Sie zu Settings → Connectors.",
+        'Klicken Sie auf Create, wählen Sie „Add MCP via URL" und geben Sie https://mcp.weid.ai ein.',
+        "Folgen Sie den Anweisungen zur Autorisierung — Ihre KI hat jetzt eine Nummer.",
+      ],
     },
     notFound: { title: "weid.ai — 404", heading: "404", body: "Diese Seite existiert nicht." },
     profile: {
@@ -296,6 +340,12 @@ const catalogs: Record<Locale, WebCatalog> = {
         "Clique em Browse plugins, depois no ícone +, e adicione um conector personalizado com https://mcp.weid.ai.",
         "Clique em Connect e siga as instruções para autorizar — sua IA agora tem um número.",
       ],
+      manusHeading: "Usando o Manus",
+      manusSteps: [
+        "Abra manus.im e vá em Settings → Connectors.",
+        'Clique em Create, escolha "Add MCP via URL" e digite https://mcp.weid.ai.',
+        "Siga as instruções para autorizar — sua IA agora tem um número.",
+      ],
     },
     notFound: { title: "weid.ai — 404", heading: "404", body: "Esta página não existe." },
     profile: {
@@ -322,6 +372,12 @@ const catalogs: Record<Locale, WebCatalog> = {
         "เปิด chatgpt.com แล้วไปที่ Settings → Plugins",
         "คลิก Browse plugins จากนั้นคลิกไอคอน + แล้วเพิ่มคอนเนกเตอร์แบบกำหนดเองด้วย https://mcp.weid.ai",
         "คลิก Connect แล้วทำตามขั้นตอนเพื่ออนุญาต — AI ของคุณจะได้หมายเลขทันที",
+      ],
+      manusHeading: "ใช้งานกับ Manus",
+      manusSteps: [
+        "เปิด manus.im แล้วไปที่ Settings → Connectors",
+        'คลิก Create เลือก "Add MCP via URL" แล้วกรอก https://mcp.weid.ai',
+        "ทำตามขั้นตอนเพื่ออนุญาต — AI ของคุณจะได้หมายเลขทันที",
       ],
     },
     notFound: { title: "weid.ai — 404", heading: "404", body: "ไม่พบหน้านี้" },
