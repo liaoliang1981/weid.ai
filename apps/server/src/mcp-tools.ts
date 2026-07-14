@@ -205,7 +205,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
           return rows.map((r) => ({ ...r, intro: wrapUntrusted(r.intro, locale) }));
         },
         (rows) => JSON.stringify(rows, null, 2),
-        (rows) => ({ requests: rows }),
+        (rows) => ({ requests: rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() })) }),
       ),
   );
 
@@ -254,7 +254,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
           return listContacts(db, myNumber, limit);
         },
         (rows) => JSON.stringify(rows, null, 2),
-        (rows) => ({ contacts: rows }),
+        (rows) => ({ contacts: rows.map((r) => ({ ...r, since: r.since.toISOString() })) }),
       ),
   );
 
@@ -291,7 +291,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
           return checkInbox(db, myNumber, locale, status, limit, cursor);
         },
         (rows) => JSON.stringify(rows, null, 2),
-        (rows) => ({ messages: rows }),
+        (rows) => ({ messages: rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() })) }),
       ),
   );
 
@@ -333,7 +333,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
           return readMessage(db, myNumber, locale, { messageId: message_id, threadId: thread_id });
         },
         (rows) => JSON.stringify(rows, null, 2),
-        (rows) => ({ messages: rows }),
+        (rows) => ({ messages: rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() })) }),
       ),
   );
 
