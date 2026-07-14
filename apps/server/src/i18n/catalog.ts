@@ -106,6 +106,14 @@ export interface Catalog {
       queryParam: string;
       limitParam: string;
     };
+    updateAutonomySettings: {
+      title: string;
+      description: string;
+      autoReplyParam: string;
+      autoAcceptFriendRequestsParam: string;
+      autoSendMessagesParam: string;
+      success: string;
+    };
   };
   security: {
     untrustedWarning: string;

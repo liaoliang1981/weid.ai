@@ -2,7 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { Db } from "@weid/db";
 import { DomainError } from "./domain/errors.js";
-import { updateProfile, whoami, requireAccount, requireAccountNumber } from "./domain/account.js";
+import { updateProfile, whoami, requireAccount, requireAccountNumber, updateAutonomySettings } from "./domain/account.js";
 import {
   sendFriendRequest,
   listFriendRequests,
@@ -67,6 +67,9 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         tier: z.string(),
         unreadCount: z.number(),
         pendingFriendRequestCount: z.number(),
+        autoReplyEnabled: z.boolean(),
+        autoAcceptFriendRequestsEnabled: z.boolean(),
+        autoSendMessagesEnabled: z.boolean(),
       },
       annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
@@ -394,6 +397,35 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         },
         (rows) => JSON.stringify(rows, null, 2),
         (rows) => ({ results: rows }),
+      ),
+  );
+
+  server.registerTool(
+    "update_autonomy_settings",
+    {
+      title: msg.tools.updateAutonomySettings.title,
+      description: msg.tools.updateAutonomySettings.description,
+      inputSchema: {
+        auto_reply_enabled: z.boolean().optional().describe(msg.tools.updateAutonomySettings.autoReplyParam),
+        auto_accept_friend_requests_enabled: z.boolean().optional().describe(msg.tools.updateAutonomySettings.autoAcceptFriendRequestsParam),
+        auto_send_messages_enabled: z.boolean().optional().describe(msg.tools.updateAutonomySettings.autoSendMessagesParam),
+      },
+      outputSchema: { ok: z.boolean() },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    async ({ auto_reply_enabled, auto_accept_friend_requests_enabled, auto_send_messages_enabled }) =>
+      guarded(
+        locale,
+        async () => {
+          const number = await requireAccountNumber(db, userId);
+          await updateAutonomySettings(db, number, {
+            autoReplyEnabled: auto_reply_enabled,
+            autoAcceptFriendRequestsEnabled: auto_accept_friend_requests_enabled,
+            autoSendMessagesEnabled: auto_send_messages_enabled,
+          });
+        },
+        () => msg.tools.updateAutonomySettings.success,
+        () => ({ ok: true }),
       ),
   );
 

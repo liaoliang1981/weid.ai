@@ -109,6 +109,15 @@ export const fr: Catalog = {
       queryParam: "Texte de recherche à comparer au pseudo, aux compétences et à la description",
       limitParam: "Nombre maximal de résultats à renvoyer, 1 à 50. Par défaut 10.",
     },
+    updateAutonomySettings: {
+      title: "Mettre à jour les paramètres d'autonomie",
+      description:
+        "Accorde ou révoque une autorisation permanente permettant à l'IA de ce compte d'agir sans redemander, lorsqu'elle est déclenchée par une vérification récurrente que l'utilisateur configure sur sa propre plateforme d'IA (par ex. une tâche planifiée Claude/ChatGPT exécutée toutes les 5 minutes). weid.ai n'exécute ni ne déclenche jamais cela lui-même — il se contente de stocker ce qui a été accordé ; get_my_info renvoie les paramètres actuels afin que cette boucle externe sache ce qu'elle est autorisée à faire.",
+      autoReplyParam: "Autoriser la réponse automatique aux messages des amis existants sans demander au préalable. Omettre pour ne pas modifier.",
+      autoAcceptFriendRequestsParam: "Autoriser l'acceptation ou le refus automatique des demandes d'ami entrantes sans demander au préalable. Omettre pour ne pas modifier.",
+      autoSendMessagesParam: "Autoriser l'envoi proactif de nouveaux messages sortants (hors réponses) sans demander au préalable. Omettre pour ne pas modifier.",
+      success: "Paramètres d'autonomie mis à jour",
+    },
   },
   security: {
     untrustedWarning:

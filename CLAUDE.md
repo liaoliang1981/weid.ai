@@ -111,7 +111,7 @@ oauth_clients / oauth_tokens:  按 OAuth 2.1 + RFC 7591 标准表结构
 
 ## 4. MCP 工具定义（服务器暴露给 Claude/GPT 的能力）
 
-每个工具的 description 要写给**模型**看——清晰说明何时调用、参数含义。号码在 OAuth 授权那一步（见 §2 设计决定 6）就已经和 token 绑定好了，所以这里**不需要**一个"AI 自己注册"的工具——拿到 token 的那一刻账号必然已存在。以下为必须实现的 11 个工具：
+每个工具的 description 要写给**模型**看——清晰说明何时调用、参数含义。号码在 OAuth 授权那一步（见 §2 设计决定 6）就已经和 token 绑定好了，所以这里**不需要**一个"AI 自己注册"的工具——拿到 token 的那一刻账号必然已存在。以下为必须实现的 12 个工具：
 
 **身份与名片**
 1. `get_my_info`（原命名 `whoami`，为与其余 10 个工具统一的 动词_名词 snake_case 命名规范改名）— 返回当前登录用户的号码、昵称、名片、未读消息数、待处理好友申请数。模型在会话开始或用户问"我的 Weid 号"时调用。
@@ -129,6 +129,9 @@ oauth_clients / oauth_tokens:  按 OAuth 2.1 + RFC 7591 标准表结构
 9. `read_message(message_id | thread_id)` — 读取单条消息全文或整个会话串；读取后自动置为已读。
 10. `send_message(to_number, subject, body_text, structured?)` — 发送消息，一步发出。`to_number` 接受 `WEID-10024`、`10024`、`@10024`、`10024@weid.ai` 等写法并归一化，展示统一用 `WEID-10024`。**好友门槛硬规则**：双方非好友时拒绝发送，返回错误"对方还不是你的好友，请先用 send_friend_request 发好友申请"。对方号码不存在或 suspended 同样明确报错。
 11. `search_directory(query, limit?=10)` — 在公开名片中按昵称/能力/描述全文检索，返回号码+昵称列表。这是"电话簿"，也是昵称不唯一时找人的正道。
+
+**自主权限**
+12. `update_autonomy_settings(auto_reply_enabled?, auto_accept_friend_requests_enabled?, auto_send_messages_enabled?)` — 授予/收回三项独立的自主权限开关（默认全部关闭，opt-in）。这三个开关**纯粹是存储的授权状态，weid.ai 自己从不读取它们去运行或触发任何动作**——真正的"自主"完全靠用户在自己的 Claude/ChatGPT 里开一个固定 5 分钟一次的 Scheduled Task（用户不可自行调整这个间隔），那个定时任务会先调 `get_my_info` 看当前被授予了哪些权限，再决定要不要在无需人确认的情况下自动回复消息、自动处理好友申请、或主动发起新消息。`get_my_info` 的返回里带这三个开关的当前状态。
 
 工具实现共同要求：
 - 所有工具须先通过 OAuth token 解析出 user → number；理论上每个 token 背后都已有号码（见 §2 设计决定 6），万一账号数据异常查不到，返回"账号数据异常，请重新登录 auth.weid.ai"这类兜底错误，而不是引导去调用某个注册工具。
@@ -196,7 +199,7 @@ oauth_clients / oauth_tokens:  按 OAuth 2.1 + RFC 7591 标准表结构
 ✅ 验收：连续注册 3 个账号获得 10000、10001、10002；浏览器访问 `weid.ai/10000` 看到名片、`weid.ai/@10000` 正确跳转；并发 50 请求注册无重号。
 
 **M3 · OAuth + MCP 服务器（4–6 天，最难）**
-OAuth 2.1 全流程、MCP Streamable HTTP、11 个工具全部实现（含好友门槛、申请额度 50/天、验证语 ≤100 字、多语言错误、注入防护包裹）。
+OAuth 2.1 全流程、MCP Streamable HTTP、12 个工具全部实现（含好友门槛、申请额度 50/天、验证语 ≤100 字、多语言错误、注入防护包裹）。
 ✅ 验收：MCP Inspector 全工具通过；claude.ai 真机添加连接器成功，冷启动走完"授权页填昵称→一次扫码→同意"拿到 token 后完成 get_my_info → send_friend_request → respond_friend_request → send_message 全链路；非好友发消息被正确拦截。
 
 **M4 · 双端互通（1–2 天）**
@@ -211,7 +214,7 @@ ChatGPT 侧接入调通。（本阶段不做邮件通知，见 §2 设计决定 
 
 ## 10. 明确不做（防止范围蔓延，出现即砍）
 
-- 不做 agent 托管/定时任务/自动回复（阶段 1）
+- 不做 agent 托管、不跑任何定时任务、不接任何模型 API——`update_autonomy_settings` 只存用户授予的权限状态，真正驱动自动回复/自动处理好友申请/主动发消息的循环完全跑在用户自己的 Claude/ChatGPT Scheduled Task 里（固定 5 分钟一次，用户不可调整间隔），weid.ai 服务器自身零推理、零托管，见 §4 工具 12
 - 不做 A2A 对外联邦、AP2 支付（阶段 2）
 - 不做群发、群组、频道
 - 不做移动 App、不做 React 前端

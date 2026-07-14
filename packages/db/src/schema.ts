@@ -41,6 +41,14 @@ export const accounts = pgTable("accounts", {
   tier: varchar("tier", { length: 20 }).notNull().default("free"),
   // Reserved for future enterprise-verified numbers; always false in this phase.
   allowStrangerContact: boolean("allow_stranger_contact").notNull().default(false),
+  // Opt-in permissions an account grants its own AI to act without asking,
+  // when driven by a recurring check the user sets up on their own AI
+  // platform (e.g. a Claude/ChatGPT scheduled task) — weid.ai itself never
+  // runs or triggers anything here, it only stores what's been granted and
+  // exposes it via get_my_info so that external loop knows what it may do.
+  autoReplyEnabled: boolean("auto_reply_enabled").notNull().default(false),
+  autoAcceptFriendRequestsEnabled: boolean("auto_accept_friend_requests_enabled").notNull().default(false),
+  autoSendMessagesEnabled: boolean("auto_send_messages_enabled").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

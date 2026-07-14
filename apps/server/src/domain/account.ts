@@ -111,6 +111,9 @@ export interface WhoAmI {
   tier: string;
   unreadCount: number;
   pendingFriendRequestCount: number;
+  autoReplyEnabled: boolean;
+  autoAcceptFriendRequestsEnabled: boolean;
+  autoSendMessagesEnabled: boolean;
 }
 
 export async function whoami(db: Db, userId: string): Promise<WhoAmI | null> {
@@ -134,5 +137,28 @@ export async function whoami(db: Db, userId: string): Promise<WhoAmI | null> {
     tier: account.tier,
     unreadCount,
     pendingFriendRequestCount,
+    autoReplyEnabled: account.autoReplyEnabled,
+    autoAcceptFriendRequestsEnabled: account.autoAcceptFriendRequestsEnabled,
+    autoSendMessagesEnabled: account.autoSendMessagesEnabled,
   };
+}
+
+export interface AutonomySettingsInput {
+  autoReplyEnabled?: boolean;
+  autoAcceptFriendRequestsEnabled?: boolean;
+  autoSendMessagesEnabled?: boolean;
+}
+
+// Purely a stored permission grant — weid.ai never reads these to run
+// anything itself. They exist so a recurring check the user sets up on
+// their own AI platform (see CLAUDE.md §4) can call get_my_info first and
+// know, without asking the human again, which autonomous actions it's
+// been given standing permission to take.
+export async function updateAutonomySettings(db: Db, number: bigint, input: AutonomySettingsInput): Promise<void> {
+  const update: Record<string, boolean> = {};
+  if (input.autoReplyEnabled !== undefined) update.autoReplyEnabled = input.autoReplyEnabled;
+  if (input.autoAcceptFriendRequestsEnabled !== undefined) update.autoAcceptFriendRequestsEnabled = input.autoAcceptFriendRequestsEnabled;
+  if (input.autoSendMessagesEnabled !== undefined) update.autoSendMessagesEnabled = input.autoSendMessagesEnabled;
+  if (Object.keys(update).length === 0) return;
+  await db.update(accounts).set(update).where(eq(accounts.number, number));
 }

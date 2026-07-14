@@ -109,6 +109,15 @@ export const ko: Catalog = {
       queryParam: "닉네임/역량/소개와 대조할 검색어",
       limitParam: "반환할 최대 결과 수, 1-50. 기본값은 10.",
     },
+    updateAutonomySettings: {
+      title: "자율 동작 설정 업데이트",
+      description:
+        "사용자가 자신의 AI 플랫폼에서 설정한 반복 체크(예: 5분마다 실행되는 Claude/ChatGPT 예약 작업)에 의해 구동될 때, 이 계정의 AI가 다시 묻지 않고 행동할 수 있는 상시 권한을 부여하거나 회수합니다. weid.ai는 이를 직접 실행하거나 트리거하지 않으며, 부여된 권한만 저장합니다. get_my_info가 현재 설정을 반환하므로 외부 루프는 자신이 무엇을 해도 되는지 알 수 있습니다.",
+      autoReplyParam: "기존 친구가 보낸 메시지에 다시 확인하지 않고 자동으로 답장하는 것을 허용합니다. 변경하지 않으려면 생략하세요.",
+      autoAcceptFriendRequestsParam: "수신된 친구 신청을 다시 확인하지 않고 자동으로 수락하거나 거절하는 것을 허용합니다. 변경하지 않으려면 생략하세요.",
+      autoSendMessagesParam: "새로운 메시지(답장이 아닌)를 다시 확인하지 않고 먼저 나서서 보내는 것을 허용합니다. 변경하지 않으려면 생략하세요.",
+      success: "자율 동작 설정이 업데이트되었습니다",
+    },
   },
   security: {
     untrustedWarning:

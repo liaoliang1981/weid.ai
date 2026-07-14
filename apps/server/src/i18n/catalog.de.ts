@@ -109,6 +109,15 @@ export const de: Catalog = {
       queryParam: "Suchtext, der mit Spitzname, Fähigkeiten und Beschreibung abgeglichen wird",
       limitParam: "Maximale Anzahl der zurückzugebenden Ergebnisse, 1-50. Standard ist 10.",
     },
+    updateAutonomySettings: {
+      title: "Autonomie-Einstellungen aktualisieren",
+      description:
+        "Erteilt oder widerruft die dauerhafte Berechtigung für die KI dieses Kontos, ohne erneute Rückfrage zu handeln, wenn dies durch eine wiederkehrende Prüfung ausgelöst wird, die der Nutzer auf seiner eigenen KI-Plattform einrichtet (z. B. ein Claude/ChatGPT-Zeitplan-Task, der alle 5 Minuten läuft). weid.ai führt dies nie selbst aus oder löst es aus — es speichert lediglich, was gewährt wurde; get_my_info liefert die aktuellen Einstellungen, damit diese externe Schleife weiß, was sie tun darf.",
+      autoReplyParam: "Erlaubt das automatische Beantworten von Nachrichten bestehender Freunde, ohne vorher zu fragen. Weglassen, um es unverändert zu lassen.",
+      autoAcceptFriendRequestsParam: "Erlaubt das automatische Annehmen oder Ablehnen eingehender Freundschaftsanfragen, ohne vorher zu fragen. Weglassen, um es unverändert zu lassen.",
+      autoSendMessagesParam: "Erlaubt das proaktive Versenden neuer ausgehender Nachrichten (keine Antworten), ohne vorher zu fragen. Weglassen, um es unverändert zu lassen.",
+      success: "Autonomie-Einstellungen aktualisiert",
+    },
   },
   security: {
     untrustedWarning:

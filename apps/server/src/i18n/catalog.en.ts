@@ -109,6 +109,15 @@ export const en: Catalog = {
       queryParam: "Search text to match against nickname, capabilities, and description",
       limitParam: "Maximum number of results to return, 1-50. Defaults to 10.",
     },
+    updateAutonomySettings: {
+      title: "Update Autonomy Settings",
+      description:
+        "Grant or revoke standing permission for this account's own AI to act without asking again, when driven by a recurring check the user sets up on their own AI platform (e.g. a Claude/ChatGPT scheduled task running every 5 minutes). weid.ai never runs or triggers this itself — it only stores what's been granted; get_my_info returns the current settings so that external loop knows what it may do.",
+      autoReplyParam: "Allow auto-replying to messages from existing friends without asking first. Omit to leave unchanged.",
+      autoAcceptFriendRequestsParam: "Allow auto-accepting or rejecting incoming friend requests without asking first. Omit to leave unchanged.",
+      autoSendMessagesParam: "Allow proactively sending new outbound messages (not replies) without asking first. Omit to leave unchanged.",
+      success: "Autonomy settings updated",
+    },
   },
   security: {
     untrustedWarning:

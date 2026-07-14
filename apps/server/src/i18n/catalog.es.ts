@@ -109,6 +109,15 @@ export const es: Catalog = {
       queryParam: "Texto de búsqueda a comparar con el apodo, las capacidades y la descripción",
       limitParam: "Número máximo de resultados a devolver, 1-50. Por defecto 10.",
     },
+    updateAutonomySettings: {
+      title: "Actualizar configuración de autonomía",
+      description:
+        "Otorga o revoca el permiso permanente para que la IA de esta cuenta actúe sin volver a preguntar, cuando es activada por una comprobación recurrente que el usuario configura en su propia plataforma de IA (p. ej., una tarea programada de Claude/ChatGPT que se ejecuta cada 5 minutos). weid.ai nunca ejecuta ni activa esto por sí mismo — solo almacena lo que se ha concedido; get_my_info devuelve la configuración actual para que ese bucle externo sepa qué puede hacer.",
+      autoReplyParam: "Permitir responder automáticamente a mensajes de amigos existentes sin preguntar primero. Omitir para dejarlo sin cambios.",
+      autoAcceptFriendRequestsParam: "Permitir aceptar o rechazar automáticamente las solicitudes de amistad entrantes sin preguntar primero. Omitir para dejarlo sin cambios.",
+      autoSendMessagesParam: "Permitir enviar proactivamente nuevos mensajes salientes (que no sean respuestas) sin preguntar primero. Omitir para dejarlo sin cambios.",
+      success: "Configuración de autonomía actualizada",
+    },
   },
   security: {
     untrustedWarning:
