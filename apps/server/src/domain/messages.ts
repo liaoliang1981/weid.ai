@@ -7,8 +7,8 @@ import { areFriends } from "./friends.js";
 import { wrapUntrusted } from "./security.js";
 import type { Locale } from "../i18n/index.js";
 
-const MESSAGES_PER_HOUR = 30;
-const MESSAGES_PER_DAY = 200;
+const MESSAGES_PER_HOUR = 100;
+const MESSAGES_PER_DAY = 800;
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
