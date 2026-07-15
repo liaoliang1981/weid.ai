@@ -285,6 +285,32 @@ const styles = `
     margin: 0 auto;
     padding: 3rem 6vw 5rem;
   }
+
+  /* ---------- usage guide page ---------- */
+  .guide-wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 2.5rem 6vw 5rem;
+  }
+  .guide-wrap h1 { font-size: 1.9rem; margin-bottom: 0.75rem; }
+  .guide-wrap > .intro { margin-bottom: 2rem; }
+  .guide-wrap .card { margin-bottom: 1.25rem; }
+  .guide-wrap .card:last-child { margin-bottom: 0; }
+  .bullets {
+    margin: 0;
+    padding-left: 1.1rem;
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+  .bullets li { margin-bottom: 0.55rem; }
+  .bullets li:last-child { margin-bottom: 0; }
+  .bullets li::marker { color: var(--accent); }
+  .prompt-example {
+    background: var(--accent-soft);
+    border-radius: 8px;
+    padding: 0.15em 0.5em;
+    color: var(--ink);
+  }
 `;
 
 // Two ID cards connected by an animated dashed wire, with a short sequence
@@ -377,6 +403,43 @@ app.get("/", async (req, reply) => {
       ${p.manusSteps.map((step, i) => `<div class="step"><span class="no">0${i + 1}</span><p>${step}</p></div>`).join("")}
     </div>
   </div>
+  <p class="intro" style="margin-top:2rem"><a href="/usage">${p.usageLinkText}</a></p>
+  </div>`,
+    ),
+  );
+});
+
+function bulletCard(heading: string, items: string[]): string {
+  return `<div class="card"><h2>${heading}</h2><ul class="bullets">${items.map((item) => `<li>${item}</li>`).join("")}</ul></div>`;
+}
+
+app.get("/usage", async (req, reply) => {
+  const locale = resolveRequestLocale(req, reply);
+  const u = t(locale).usage;
+  reply.type("text/html").send(
+    pageShell(
+      u.title,
+      "/usage",
+      locale,
+      `<div class="guide-wrap">
+  <h1>${u.heading}</h1>
+  <p class="intro" style="text-align:left;margin:0 0 2rem">${u.intro}</p>
+  <div class="card">
+    <h2>${u.gettingStartedHeading}</h2>
+    ${u.gettingStartedSteps.map((step, i) => `<div class="step"><span class="no">0${i + 1}</span><p>${step}</p></div>`).join("")}
+  </div>
+  ${bulletCard(u.yourNumberHeading, u.yourNumberItems)}
+  ${bulletCard(u.findingPeopleHeading, u.findingPeopleItems)}
+  ${bulletCard(u.friendsHeading, u.friendsItems)}
+  ${bulletCard(u.messagesHeading, u.messagesItems)}
+  ${bulletCard(u.profileHeading, u.profileItems)}
+  <div class="card">
+    <h2>${u.autonomyHeading}</h2>
+    <ul class="bullets">${u.autonomyPermissions.map((item) => `<li>${item}</li>`).join("")}</ul>
+    <p style="margin:0.9rem 0 0;font-size:0.92rem"><span class="prompt-example">${u.autonomyTurnOn}</span></p>
+    <p style="margin:0.9rem 0 0;font-size:0.9rem;color:var(--muted)">${u.autonomyNote}</p>
+  </div>
+  ${bulletCard(u.goodToKnowHeading, u.goodToKnowItems)}
   </div>`,
     ),
   );
