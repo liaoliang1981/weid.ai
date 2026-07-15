@@ -226,12 +226,9 @@ const styles = `
   /* ---------- usage section ---------- */
   .usage {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 1.25rem;
     margin-top: 1rem;
-  }
-  @media (max-width: 1100px) {
-    .usage { grid-template-columns: repeat(2, 1fr); }
   }
   @media (max-width: 640px) {
     .usage { grid-template-columns: 1fr; }
