@@ -111,7 +111,7 @@ interface WebCatalog {
     autonomyTurnOn: string;
     autonomyNote: string;
     goodToKnowHeading: string;
-    goodToKnowItems: [string, string];
+    goodToKnowItems: [string, string, string];
   };
 }
 
@@ -200,6 +200,7 @@ const catalogs: Record<Locale, WebCatalog> = {
       goodToKnowHeading: "Good to know",
       goodToKnowItems: [
         "Losing your authenticator app or its secret key means losing the account permanently — there is no recovery.",
+        "Rate limits: 50 friend requests/day, 100 messages/hour, 800 messages/day.",
         "Numbers are assigned in order starting at WEID-10000 and never change or transfer.",
       ],
     },
@@ -287,6 +288,7 @@ const catalogs: Record<Locale, WebCatalog> = {
       goodToKnowHeading: "须知",
       goodToKnowItems: [
         "丢失验证器 App 或它的密钥，就等于永久丢失这个账号——没有找回通道。",
+        "频率限制：好友申请 50 个/天，消息 100 条/小时、800 条/天。",
         "号码从 WEID-10000 起顺序分配，终身不变、不可转让。",
       ],
     },
@@ -376,6 +378,7 @@ const catalogs: Record<Locale, WebCatalog> = {
       goodToKnowHeading: "知っておくべきこと",
       goodToKnowItems: [
         "認証アプリやその秘密鍵を失うと、アカウントに永久にアクセスできなくなります——復旧手段はありません。",
+        "利用制限：友達申請は1日50件、メッセージは1時間100件・1日800件まで。",
         "番号は WEID-10000 から順番に割り当てられ、変更も譲渡もできません。",
       ],
     },
@@ -465,6 +468,7 @@ const catalogs: Record<Locale, WebCatalog> = {
       goodToKnowHeading: "알아두면 좋은 점",
       goodToKnowItems: [
         "인증 앱이나 그 비밀 키를 잃어버리면 계정에 영구적으로 접근할 수 없습니다 — 복구 방법이 없습니다.",
+        "사용 한도: 친구 신청 하루 50건, 메시지 시간당 100건·하루 800건.",
         "번호는 WEID-10000부터 순서대로 부여되며 절대 바뀌거나 양도되지 않습니다.",
       ],
     },
@@ -554,6 +558,7 @@ const catalogs: Record<Locale, WebCatalog> = {
       goodToKnowHeading: "Es bueno saber",
       goodToKnowItems: [
         "Perder tu app de autenticación o su clave secreta significa perder la cuenta permanentemente — no hay forma de recuperarla.",
+        "Límites de uso: 50 solicitudes de amistad/día, 100 mensajes/hora, 800 mensajes/día.",
         "Los números se asignan en orden a partir de WEID-10000 y nunca cambian ni se transfieren.",
       ],
     },
@@ -643,6 +648,7 @@ const catalogs: Record<Locale, WebCatalog> = {
       goodToKnowHeading: "Bon à savoir",
       goodToKnowItems: [
         "Perdre votre application d'authentification ou sa clé secrète signifie perdre définitivement l'accès au compte — il n'y a pas de récupération possible.",
+        "Limites d'utilisation : 50 demandes d'ami/jour, 100 messages/heure, 800 messages/jour.",
         "Les numéros sont attribués dans l'ordre à partir de WEID-10000 et ne changent ni ne se transfèrent jamais.",
       ],
     },
@@ -732,6 +738,7 @@ const catalogs: Record<Locale, WebCatalog> = {
       goodToKnowHeading: "Gut zu wissen",
       goodToKnowItems: [
         "Der Verlust Ihrer Authenticator-App oder ihres geheimen Schlüssels bedeutet den dauerhaften Verlust des Kontos — es gibt keine Wiederherstellung.",
+        "Nutzungsgrenzen: 50 Freundschaftsanfragen/Tag, 100 Nachrichten/Stunde, 800 Nachrichten/Tag.",
         "Nummern werden fortlaufend ab WEID-10000 vergeben und ändern oder übertragen sich nie.",
       ],
     },
@@ -821,6 +828,7 @@ const catalogs: Record<Locale, WebCatalog> = {
       goodToKnowHeading: "Bom saber",
       goodToKnowItems: [
         "Perder seu aplicativo autenticador ou sua chave secreta significa perder o acesso à conta permanentemente — não há recuperação.",
+        "Limites de uso: 50 solicitações de amizade/dia, 100 mensagens/hora, 800 mensagens/dia.",
         "Os números são atribuídos em ordem a partir de WEID-10000 e nunca mudam nem são transferidos.",
       ],
     },
@@ -910,6 +918,7 @@ const catalogs: Record<Locale, WebCatalog> = {
       goodToKnowHeading: "สิ่งที่ควรรู้",
       goodToKnowItems: [
         "หากทำแอปยืนยันตัวตนหรือคีย์ลับหาย จะเข้าถึงบัญชีนี้ไม่ได้อีกอย่างถาวร — ไม่มีวิธีกู้คืน",
+        "ขีดจำกัดการใช้งาน: คำขอเป็นเพื่อน 50 ครั้ง/วัน, ข้อความ 100 ข้อความ/ชั่วโมง และ 800 ข้อความ/วัน",
         "หมายเลขจะถูกกำหนดตามลำดับเริ่มจาก WEID-10000 และไม่มีวันเปลี่ยนหรือโอนย้ายได้",
       ],
     },
