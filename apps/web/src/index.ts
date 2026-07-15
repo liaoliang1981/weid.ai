@@ -246,6 +246,23 @@ const styles = `
     text-transform: uppercase;
     letter-spacing: 0.04em;
     margin: 0 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+  .platform-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: none;
   }
   .step { display: flex; gap: 0.8rem; margin-bottom: 0.9rem; align-items: flex-start; }
   .step:last-child { margin-bottom: 0; }
@@ -391,19 +408,19 @@ app.get("/", async (req, reply) => {
   <div class="wrap">
   <div class="usage">
     <div class="card">
-      <h2>${p.claudeHeading}</h2>
+      <h2><span class="platform-icon" style="background:#D97757">C</span>${p.claudeHeading}</h2>
       ${p.claudeSteps.map((step, i) => `<div class="step"><span class="no">0${i + 1}</span><p>${step}</p></div>`).join("")}
     </div>
     <div class="card">
-      <h2>${p.chatgptHeading}</h2>
+      <h2><span class="platform-icon" style="background:#10A37F">G</span>${p.chatgptHeading}</h2>
       ${p.chatgptSteps.map((step, i) => `<div class="step"><span class="no">0${i + 1}</span><p>${step}</p></div>`).join("")}
     </div>
     <div class="card">
-      <h2>${p.manusHeading}</h2>
+      <h2><span class="platform-icon" style="background:#4F7CFF">M</span>${p.manusHeading}</h2>
       ${p.manusSteps.map((step, i) => `<div class="step"><span class="no">0${i + 1}</span><p>${step}</p></div>`).join("")}
     </div>
     <div class="card">
-      <h2>${p.grokHeading}</h2>
+      <h2><span class="platform-icon" style="background:#000000">X</span>${p.grokHeading}</h2>
       ${p.grokSteps.map((step, i) => `<div class="step"><span class="no">0${i + 1}</span><p>${step}</p></div>`).join("")}
     </div>
   </div>
