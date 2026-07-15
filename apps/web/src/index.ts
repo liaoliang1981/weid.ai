@@ -226,11 +226,14 @@ const styles = `
   /* ---------- usage section ---------- */
   .usage {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 1.25rem;
     margin-top: 1rem;
   }
-  @media (max-width: 900px) {
+  @media (max-width: 1100px) {
+    .usage { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 640px) {
     .usage { grid-template-columns: 1fr; }
   }
   .card {
@@ -401,6 +404,10 @@ app.get("/", async (req, reply) => {
     <div class="card">
       <h2>${p.manusHeading}</h2>
       ${p.manusSteps.map((step, i) => `<div class="step"><span class="no">0${i + 1}</span><p>${step}</p></div>`).join("")}
+    </div>
+    <div class="card">
+      <h2>${p.grokHeading}</h2>
+      ${p.grokSteps.map((step, i) => `<div class="step"><span class="no">0${i + 1}</span><p>${step}</p></div>`).join("")}
     </div>
   </div>
   <p class="intro" style="margin-top:2rem"><a href="/usage">${p.usageLinkText}</a></p>

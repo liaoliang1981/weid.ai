@@ -79,6 +79,8 @@ interface WebCatalog {
     chatgptSteps: [string, string, string];
     manusHeading: string;
     manusSteps: [string, string, string];
+    grokHeading: string;
+    grokSteps: [string, string, string];
     usageLinkText: string;
   };
   notFound: {
@@ -141,6 +143,12 @@ const catalogs: Record<Locale, WebCatalog> = {
         'Click Create, choose "Add MCP via URL," and enter https://mcp.weid.ai.',
         "Follow the prompts to authorize — your AI now has a number.",
       ],
+      grokHeading: "Using Grok",
+      grokSteps: [
+        "Open grok.com and go to Connectors.",
+        "Click Custom and enter https://mcp.weid.ai.",
+        "Follow the prompts to authorize — your AI now has a number.",
+      ],
       usageLinkText: "Full usage guide →",
     },
     notFound: { title: "weid.ai — 404", heading: "404", body: "This page does not exist." },
@@ -154,7 +162,7 @@ const catalogs: Record<Locale, WebCatalog> = {
       intro: "Everything below is phrased as things you say to your AI in plain language — your AI is the one calling the underlying tools.",
       gettingStartedHeading: "Getting started",
       gettingStartedSteps: [
-        "Add the custom connector https://mcp.weid.ai in Claude, ChatGPT, or Manus.",
+        "Add the custom connector https://mcp.weid.ai in Claude, ChatGPT, Manus, or Grok.",
         "First time: pick a nickname. You'll get a Weid number (e.g. WEID-10024) and a QR code — scan it into an authenticator app, then enter the current 6-digit code to confirm setup finished correctly.",
         "Already have a number? Log in with your number and the current code from your authenticator app.",
       ],
@@ -229,6 +237,12 @@ const catalogs: Record<Locale, WebCatalog> = {
         "点击创建，选择「通过 URL 添加 MCP」，填 https://mcp.weid.ai。",
         "按提示完成授权，你的 AI 就有号码了。",
       ],
+      grokHeading: "在 Grok 里使用",
+      grokSteps: [
+        "打开 grok.com，进入连接器。",
+        "点击自定义，填 https://mcp.weid.ai。",
+        "按提示完成授权，你的 AI 就有号码了。",
+      ],
       usageLinkText: "完整使用说明 →",
     },
     notFound: { title: "weid.ai — 404", heading: "404", body: "这个页面不存在。" },
@@ -242,7 +256,7 @@ const catalogs: Record<Locale, WebCatalog> = {
       intro: "下面全部写成「跟你的 AI 怎么说」的自然语言——实际调用底层工具的是你的 AI。",
       gettingStartedHeading: "快速上手",
       gettingStartedSteps: [
-        "在 Claude、ChatGPT 或 Manus 里添加自定义连接器 https://mcp.weid.ai。",
+        "在 Claude、ChatGPT、Manus 或 Grok 里添加自定义连接器 https://mcp.weid.ai。",
         "第一次使用：起一个昵称，会拿到一个 Weid 号（比如 WEID-10024）和一个二维码——用验证器 App 扫描，然后输入当前显示的 6 位验证码确认设置成功。",
         "已经有号了？直接用号码 + 验证器 App 里当前的验证码登录。",
       ],
@@ -319,6 +333,12 @@ const catalogs: Record<Locale, WebCatalog> = {
         "Create をクリックして「Add MCP via URL」を選び、https://mcp.weid.ai を入力します。",
         "画面の指示に従って認可すると、あなたの AI に番号が割り当てられます。",
       ],
+      grokHeading: "Grok を使う場合",
+      grokSteps: [
+        "grok.com を開き、Connectors に進みます。",
+        "Custom をクリックし、https://mcp.weid.ai を入力します。",
+        "画面の指示に従って認可すると、あなたの AI に番号が割り当てられます。",
+      ],
       usageLinkText: "使い方ガイド全文 →",
     },
     notFound: { title: "weid.ai — 404", heading: "404", body: "このページは存在しません。" },
@@ -332,7 +352,7 @@ const catalogs: Record<Locale, WebCatalog> = {
       intro: "以下はすべて、あなたが AI に対して自然な言葉で話しかける形で書かれています——実際に裏側のツールを呼び出すのはあなたの AI です。",
       gettingStartedHeading: "はじめに",
       gettingStartedSteps: [
-        "Claude、ChatGPT、または Manus でカスタムコネクタ https://mcp.weid.ai を追加してください。",
+        "Claude、ChatGPT、Manus、または Grok でカスタムコネクタ https://mcp.weid.ai を追加してください。",
         "初めての場合：ニックネームを決めます。Weid 番号（例：WEID-10024）と QR コードが発行されるので、認証アプリでスキャンし、表示された現在の6桁のコードを入力してセットアップ完了を確認してください。",
         "すでに番号を持っている場合：番号と、認証アプリに表示されている現在のコードでログインしてください。",
       ],
@@ -409,6 +429,12 @@ const catalogs: Record<Locale, WebCatalog> = {
         "Create를 클릭하고 \"Add MCP via URL\"을 선택한 다음 https://mcp.weid.ai를 입력하세요.",
         "안내에 따라 승인하면 당신의 AI가 번호를 받습니다.",
       ],
+      grokHeading: "Grok 사용하기",
+      grokSteps: [
+        "grok.com을 열고 Connectors로 이동하세요.",
+        "Custom을 클릭하고 https://mcp.weid.ai를 입력하세요.",
+        "안내에 따라 승인하면 당신의 AI가 번호를 받습니다.",
+      ],
       usageLinkText: "전체 사용 가이드 보기 →",
     },
     notFound: { title: "weid.ai — 404", heading: "404", body: "이 페이지는 존재하지 않습니다." },
@@ -422,7 +448,7 @@ const catalogs: Record<Locale, WebCatalog> = {
       intro: "아래 내용은 모두 당신이 AI에게 자연스러운 말로 하는 말로 쓰여 있습니다 — 실제로 하부 도구를 호출하는 것은 당신의 AI입니다.",
       gettingStartedHeading: "시작하기",
       gettingStartedSteps: [
-        "Claude, ChatGPT, 또는 Manus에서 커스텀 커넥터 https://mcp.weid.ai를 추가하세요.",
+        "Claude, ChatGPT, Manus, 또는 Grok에서 커스텀 커넥터 https://mcp.weid.ai를 추가하세요.",
         "처음 사용하는 경우: 닉네임을 정하세요. Weid 번호(예: WEID-10024)와 QR 코드를 받게 되며, 인증 앱으로 스캔한 뒤 현재 표시된 6자리 코드를 입력해 설정이 제대로 끝났는지 확인하세요.",
         "이미 번호가 있다면? 번호와 인증 앱에 표시되는 현재 코드로 로그인하세요.",
       ],
@@ -499,6 +525,12 @@ const catalogs: Record<Locale, WebCatalog> = {
         'Haz clic en Create, elige "Add MCP via URL" e ingresa https://mcp.weid.ai.',
         "Sigue las indicaciones para autorizar: tu IA ya tiene un número.",
       ],
+      grokHeading: "Usando Grok",
+      grokSteps: [
+        "Abre grok.com y ve a Connectors.",
+        "Haz clic en Custom e ingresa https://mcp.weid.ai.",
+        "Sigue las indicaciones para autorizar: tu IA ya tiene un número.",
+      ],
       usageLinkText: "Guía de uso completa →",
     },
     notFound: { title: "weid.ai — 404", heading: "404", body: "Esta página no existe." },
@@ -512,7 +544,7 @@ const catalogs: Record<Locale, WebCatalog> = {
       intro: "Todo lo de abajo está escrito como cosas que le dices a tu IA en lenguaje natural — tu IA es quien llama a las herramientas subyacentes.",
       gettingStartedHeading: "Primeros pasos",
       gettingStartedSteps: [
-        "Agrega el conector personalizado https://mcp.weid.ai en Claude, ChatGPT o Manus.",
+        "Agrega el conector personalizado https://mcp.weid.ai en Claude, ChatGPT, Manus o Grok.",
         "Primera vez: elige un apodo. Recibirás un número Weid (p. ej. WEID-10024) y un código QR — escanéalo con una app de autenticación, luego introduce el código de 6 dígitos actual para confirmar que la configuración terminó correctamente.",
         "¿Ya tienes un número? Inicia sesión con tu número y el código actual de tu app de autenticación.",
       ],
@@ -589,6 +621,12 @@ const catalogs: Record<Locale, WebCatalog> = {
         'Cliquez sur Create, choisissez « Add MCP via URL » et saisissez https://mcp.weid.ai.',
         "Suivez les instructions pour autoriser — votre IA a maintenant un numéro.",
       ],
+      grokHeading: "Avec Grok",
+      grokSteps: [
+        "Ouvrez grok.com et allez dans Connectors.",
+        "Cliquez sur Custom et saisissez https://mcp.weid.ai.",
+        "Suivez les instructions pour autoriser — votre IA a maintenant un numéro.",
+      ],
       usageLinkText: "Guide d'utilisation complet →",
     },
     notFound: { title: "weid.ai — 404", heading: "404", body: "Cette page n'existe pas." },
@@ -602,7 +640,7 @@ const catalogs: Record<Locale, WebCatalog> = {
       intro: "Tout ce qui suit est formulé comme ce que vous diriez à votre IA en langage naturel — c'est votre IA qui appelle les outils sous-jacents.",
       gettingStartedHeading: "Prise en main",
       gettingStartedSteps: [
-        "Ajoutez le connecteur personnalisé https://mcp.weid.ai dans Claude, ChatGPT ou Manus.",
+        "Ajoutez le connecteur personnalisé https://mcp.weid.ai dans Claude, ChatGPT, Manus ou Grok.",
         "Première fois : choisissez un pseudo. Vous recevrez un numéro Weid (par ex. WEID-10024) et un QR code — scannez-le dans une application d'authentification, puis saisissez le code à 6 chiffres actuel pour confirmer que la configuration s'est bien terminée.",
         "Vous avez déjà un numéro ? Connectez-vous avec votre numéro et le code actuel de votre application d'authentification.",
       ],
@@ -679,6 +717,12 @@ const catalogs: Record<Locale, WebCatalog> = {
         'Klicken Sie auf Create, wählen Sie „Add MCP via URL" und geben Sie https://mcp.weid.ai ein.',
         "Folgen Sie den Anweisungen zur Autorisierung — Ihre KI hat jetzt eine Nummer.",
       ],
+      grokHeading: "Mit Grok",
+      grokSteps: [
+        "Öffnen Sie grok.com und gehen Sie zu Connectors.",
+        "Klicken Sie auf Custom und geben Sie https://mcp.weid.ai ein.",
+        "Folgen Sie den Anweisungen zur Autorisierung — Ihre KI hat jetzt eine Nummer.",
+      ],
       usageLinkText: "Vollständige Nutzungsanleitung →",
     },
     notFound: { title: "weid.ai — 404", heading: "404", body: "Diese Seite existiert nicht." },
@@ -692,7 +736,7 @@ const catalogs: Record<Locale, WebCatalog> = {
       intro: "Alles Folgende ist so formuliert, wie Sie es Ihrer KI in normaler Sprache sagen würden — Ihre KI ruft die zugrunde liegenden Tools auf.",
       gettingStartedHeading: "Erste Schritte",
       gettingStartedSteps: [
-        "Fügen Sie den benutzerdefinierten Connector https://mcp.weid.ai in Claude, ChatGPT oder Manus hinzu.",
+        "Fügen Sie den benutzerdefinierten Connector https://mcp.weid.ai in Claude, ChatGPT, Manus oder Grok hinzu.",
         "Beim ersten Mal: Wählen Sie einen Spitznamen. Sie erhalten eine Weid-Nummer (z. B. WEID-10024) und einen QR-Code — scannen Sie ihn mit einer Authenticator-App und geben Sie dann den aktuell angezeigten 6-stelligen Code ein, um zu bestätigen, dass die Einrichtung erfolgreich war.",
         "Haben Sie schon eine Nummer? Melden Sie sich mit Ihrer Nummer und dem aktuellen Code aus Ihrer Authenticator-App an.",
       ],
@@ -769,6 +813,12 @@ const catalogs: Record<Locale, WebCatalog> = {
         'Clique em Create, escolha "Add MCP via URL" e digite https://mcp.weid.ai.',
         "Siga as instruções para autorizar — sua IA agora tem um número.",
       ],
+      grokHeading: "Usando o Grok",
+      grokSteps: [
+        "Abra grok.com e vá em Connectors.",
+        "Clique em Custom e digite https://mcp.weid.ai.",
+        "Siga as instruções para autorizar — sua IA agora tem um número.",
+      ],
       usageLinkText: "Guia de uso completo →",
     },
     notFound: { title: "weid.ai — 404", heading: "404", body: "Esta página não existe." },
@@ -782,7 +832,7 @@ const catalogs: Record<Locale, WebCatalog> = {
       intro: "Tudo abaixo está escrito como coisas que você diz à sua IA em linguagem natural — sua IA é quem chama as ferramentas por trás disso.",
       gettingStartedHeading: "Primeiros passos",
       gettingStartedSteps: [
-        "Adicione o conector personalizado https://mcp.weid.ai no Claude, ChatGPT ou Manus.",
+        "Adicione o conector personalizado https://mcp.weid.ai no Claude, ChatGPT, Manus ou Grok.",
         "Primeira vez: escolha um apelido. Você receberá um número Weid (ex.: WEID-10024) e um código QR — escaneie-o com um aplicativo autenticador e depois digite o código de 6 dígitos atual para confirmar que a configuração foi concluída corretamente.",
         "Já tem um número? Faça login com seu número e o código atual do seu aplicativo autenticador.",
       ],
@@ -859,6 +909,12 @@ const catalogs: Record<Locale, WebCatalog> = {
         'คลิก Create เลือก "Add MCP via URL" แล้วกรอก https://mcp.weid.ai',
         "ทำตามขั้นตอนเพื่ออนุญาต — AI ของคุณจะได้หมายเลขทันที",
       ],
+      grokHeading: "ใช้งานกับ Grok",
+      grokSteps: [
+        "เปิด grok.com แล้วไปที่ Connectors",
+        "คลิก Custom แล้วกรอก https://mcp.weid.ai",
+        "ทำตามขั้นตอนเพื่ออนุญาต — AI ของคุณจะได้หมายเลขทันที",
+      ],
       usageLinkText: "คู่มือการใช้งานฉบับเต็ม →",
     },
     notFound: { title: "weid.ai — 404", heading: "404", body: "ไม่พบหน้านี้" },
@@ -872,7 +928,7 @@ const catalogs: Record<Locale, WebCatalog> = {
       intro: "ทุกอย่างด้านล่างนี้เขียนในรูปแบบสิ่งที่คุณพูดกับ AI ของคุณด้วยภาษาธรรมดา — AI ของคุณเป็นผู้เรียกใช้เครื่องมือเบื้องหลังจริง ๆ",
       gettingStartedHeading: "เริ่มต้นใช้งาน",
       gettingStartedSteps: [
-        "เพิ่มคอนเนกเตอร์แบบกำหนดเอง https://mcp.weid.ai ใน Claude, ChatGPT หรือ Manus",
+        "เพิ่มคอนเนกเตอร์แบบกำหนดเอง https://mcp.weid.ai ใน Claude, ChatGPT, Manus หรือ Grok",
         "ครั้งแรก: ตั้งชื่อเล่น คุณจะได้รับหมายเลข Weid (เช่น WEID-10024) พร้อม QR code — สแกนเข้าแอปยืนยันตัวตน จากนั้นกรอกรหัส 6 หลักปัจจุบันเพื่อยืนยันว่าตั้งค่าสำเร็จ",
         "มีหมายเลขอยู่แล้ว? เข้าสู่ระบบด้วยหมายเลขของคุณและรหัสปัจจุบันจากแอปยืนยันตัวตน",
       ],
